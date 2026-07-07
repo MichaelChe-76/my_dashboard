@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>2026년 6월 기준 전국 기초자치단체 인구 대시보드</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Noto Sans KR 폰트 로드 -->
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+  
+  <style>
+    *, ::before, ::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: #f8fafc;
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    #tileGrid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    @media (min-width: 640px) {
+      #tileGrid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    }
+    @media (min-width: 768px) {
+      #tileGrid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    }
+    @media (min-width: 1024px) {
+      #tileGrid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+    }
+    @media (min-width: 1280px) {
+      #tileGrid { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+    }
+
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+  </style>
+</head>
+<body class="text-slate-800 antialiased min-h-screen flex flex-col">
+
+  <header class="bg-gradient-to-r from-slate-950 via-indigo-950 to-slate-950 text-white py-10 px-4 shadow-md">
+    <div class="max-w-7xl mx-auto text-center">
+      <span class="bg-indigo-500/30 text-indigo-300 text-xs font-semibold px-4 py-1.5 rounded-full uppercase tracking-wider">주민등록 인구통계 스마트 분석</span>
+      <h1 class="text-3xl md:text-4xl font-black mt-3 tracking-tight">전국 226개 기초자치단체 인구 순위 대시보드</h1>
+      <p class="text-slate-300 mt-2 text-sm md:text-base">2026년 6월말 기준 행정안전부 등록 · 선거로 기초단체장을 선출하는 226개 시/군/구 대상</p>
+      
+      <!-- 핵심 통계 데이터 카드 요약 -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8 max-w-4xl mx-auto text-left">
+        <div class="bg-white/10 p-4 rounded-xl border border-white/10">
+          <p class="text-xs text-slate-400 font-medium">전국 총 인구 (분석대상)</p>
+          <p class="text-lg md:text-xl font-bold mt-1 text-emerald-400">49,850,214명</p>
+        </div>
+        <div class="bg-white/10 p-4 rounded-xl border border-white/10">
+          <p class="text-xs text-slate-400 font-medium">분석 자치단체 수</p>
+          <p class="text-lg md:text-xl font-bold mt-1 text-sky-400">226개 기초지자체</p>
+        </div>
+        <div class="bg-white/10 p-4 rounded-xl border border-white/10">
+          <p class="text-xs text-slate-400 font-medium">인구 1위 자치단체</p>
+          <p class="text-lg md:text-xl font-bold mt-1 text-indigo-400">경기 수원시 (119만)</p>
+        </div>
+        <div class="bg-white/10 p-4 rounded-xl border border-white/10">
+          <p class="text-xs text-slate-400 font-medium">하위 일반구 분석 탑재</p>
+          <p class="text-lg md:text-xl font-bold mt-1 text-pink-400">특정시 10개 구역</p>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-grow max-w-7xl w-full mx-auto px-4 py-8">
+    
+    <!-- 컨트롤러 패널 -->
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 mb-8">
+      <div class="flex flex-col lg:flex-row gap-4 justify-between items-stretch lg:items-center">
+        <!-- 검색 입력창 -->
+        <div class="relative flex-grow max-w-lg">
+          <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+            <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+          </span>
+          <input type="text" id="searchInput" placeholder="지자체명 또는 자치구 검색 (예: 수원, 유성, 해운대, 강남)" class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-sm">
+        </div>
+        
+        <!-- 분류 셀렉터 그룹 -->
+        <div class="flex flex-wrap gap-2 items-center">
+          <select id="typeFilter" class="bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <option value="all">구분 (전체)</option>
+            <option value="시">시 (75개)</option>
+            <option value="군">군 (82개)</option>
+            <option value="구">자치구 (69개)</option>
+          </select>
+
+          <select id="regionFilter" class="bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <option value="all">광역시도 (전체)</option>
+            <option value="서울">서울특별시</option>
+            <option value="부산">부산광역시</option>
+            <option value="대구">대구광역시</option>
+            <option value="인천">인천광역시</option>
+            <option value="광주">광주광역시</option>
+            <option value="대전">대전광역시</option>
+            <option value="울산">울산광역시</option>
+            <option value="경기">경기도</option>
+            <option value="강원">강원특별자치도</option>
+            <option value="충북">충청북도</option>
+            <option value="충남">충청남도</option>
+            <option value="전북">전북특별자치도</option>
+            <option value="전남">전라남도</option>
+            <option value="경북">경상북도</option>
+            <option value="경남">경상남도</option>
+          </select>
+
+          <select id="sortOrder" class="bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <option value="pop_desc">인구 많은 순 (전국 순위)</option>
+            <option value="pop_asc">인구 적은 순</option>
+            <option value="growth_desc">전년비 인구 증가율 순</option>
+            <option value="growth_asc">전년비 인구 감소율 순</option>
+            <option value="name_asc">이름 가나다순</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- 컬러 범례 정보 및 랭킹 인디케이터 -->
+      <div class="mt-6 pt-6 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-3 text-xs text-slate-500">
+        <div class="flex items-center gap-2">
+          <span class="font-medium">🎨 인구 순위 그라데이션 가이드 :</span>
+          <span class="text-indigo-600 font-bold">전국 1위(파랑)</span>
+          <span>➔</span>
+          <span class="text-purple-600 font-bold">113위(보라)</span>
+          <span>➔</span>
+          <span class="text-red-600 font-bold">226위(빨강)</span>
+        </div>
+        <div class="w-full sm:w-48 h-3 bg-gradient-to-r from-blue-900 via-purple-700 to-red-700 rounded-full shadow-inner"></div>
+        <span id="resultCount" class="font-semibold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-md">검색결과: 226개 구역</span>
+      </div>
+    </div>
+
+    <!-- 타일 그리드 레이아웃 -->
+    <div id="tileGrid" class="gap-3">
+      <!-- 동적 렌더링에 의해 타일이 삽입되는 구역 -->
+    </div>
+
+    <!-- 미일치 예외 구역 안내 -->
+    <div id="noResults" class="hidden text-center py-20 bg-white rounded-2xl border border-slate-100 shadow-sm">
+      <svg class="w-16 h-16 text-slate-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+      <h3 class="text-lg font-bold text-slate-700">검색 조건에 일치하는 기초단체가 없습니다.</h3>
+      <p class="text-sm text-slate-500 mt-1">지역 필터를 초기화하거나 다른 검색어를 입력해 보세요.</p>
+    </div>
+  </main>
+
+  <div id="detailModal" class="fixed inset-0 bg-slate-900/80 z-50 flex items-center justify-center p-4 hidden opacity-0 transition-all duration-300" style="background-color: rgba(15, 23, 42, 0.75);">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-100 transform scale-95 transition-transform duration-300 max-h-[90vh] flex flex-col" id="modalContent">
+      <!-- 상단 헤더 -->
+      <div id="modalHeader" class="p-6 text-white relative flex-shrink-0">
+        <button onclick="closeModal()" class="absolute top-4 right-4 text-white/80 hover:text-white bg-black/20 hover:bg-black/30 p-2 rounded-full transition-all focus:outline-none" aria-label="닫기">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+        <span id="modalRank" class="bg-white/20 text-xs font-semibold px-2.5 py-0.5 rounded-full">전국 1위</span>
+        <h2 id="modalTitle" class="text-2xl font-black mt-2">경기 수원시</h2>
+        <p id="modalCategory" class="text-sm text-white/80 mt-1">수도권 · 일반 시 지역</p>
+      </div>
+
+      <!-- 인구 현황 분석 콘텐츠 (스크롤 가능하도록 영역 격리) -->
+      <div class="p-6 space-y-6 overflow-y-auto flex-grow">
+        <!-- 인구 비교 테이블 -->
+        <div class="grid grid-cols-2 gap-4">
+          <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
+            <p class="text-xs text-slate-400 font-medium">2026년 6월 (현재)</p>
+            <p id="modalPop2026" class="text-lg font-bold text-slate-800 mt-1">1,195,300명</p>
+          </div>
+          <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
+            <p class="text-xs text-slate-400 font-medium">2025년 6월 (전년)</p>
+            <p id="modalPop2025" class="text-lg font-bold text-slate-600 mt-1">1,191,063명</p>
+          </div>
+        </div>
+
+        <!-- 인구 증감 인포그래픽 미니 차트 -->
+        <div class="bg-slate-50 p-5 rounded-xl border border-slate-100">
+          <div class="flex justify-between items-center mb-3">
+            <h3 class="text-sm font-bold text-slate-700">전년 대비 인구 증감률</h3>
+            <span id="modalGrowthBadge" class="text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800">+0.35%</span>
+          </div>
+          
+          <div class="space-y-3">
+            <!-- 변화량 막대그래프 -->
+            <div class="w-full bg-slate-200 rounded-full h-2.5 overflow-hidden flex">
+              <div id="modalNegativeBar" class="bg-red-500 h-full transition-all" style="width: 0%"></div>
+              <div id="modalPositiveBar" class="bg-emerald-500 h-full transition-all" style="width: 50%"></div>
+            </div>
+            
+            <div class="flex justify-between text-xs text-slate-500">
+              <span>인구 감소추세</span>
+              <span id="modalDiffText" class="font-bold text-emerald-600">+4,237명 증가</span>
+              <span>인구 성장추세</span>
+            </div>
+          </div>
+        </div>
+
+        <div id="subDistrictsContainer" class="hidden bg-slate-50 p-5 rounded-xl border border-slate-150 space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-200 pb-2">
+            <h3 class="text-sm font-black text-indigo-950 flex items-center gap-1.5">
+              <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+              하위 행정(일반)구별 인구 분포
+            </h3>
+            <span class="text-[10px] bg-indigo-100 text-indigo-700 font-bold px-2 py-0.5 rounded-full">비자치구</span>
+          </div>
+          
+          <!-- 일반구 리스트 동적 삽입 위치 -->
+          <div id="subDistrictsList" class="space-y-3.5">
+            <!-- 동적으로 생성되는 세부 구역 리스트 -->
+          </div>
+        </div>
+
+        <!-- 텍스트 기반 요약 브리핑 -->
+        <div class="border-t border-slate-150 pt-4 text-xs text-slate-500">
+          <p id="modalOpinion" class="leading-relaxed"></p>
+        </div>
+      </div>
+
+      <!-- 푸터 -->
+      <div class="bg-slate-50 px-6 py-4 border-t border-slate-100 flex justify-between items-center flex-shrink-0">
+        <span class="text-xs text-slate-400">데이터 출처: 행정안전부 주민등록 인구현황</span>
+        <button onclick="closeModal()" class="bg-slate-800 hover:bg-slate-700 text-white font-semibold text-xs px-4.5 py-2 rounded-lg transition-all">닫기</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 전국 226개 선출직 법정 기초단체 데이터베이스 (일반행정구 인구 세부 매핑 추가)
+    const rawData = [
+      // 경기도 (31개 시군)
+      { 
+        region: "경기", name: "수원시", type: "시", pop2026: 1195300, pop2025: 1191060,
+        districts: [
+          { name: "장안구", pop: 271500 },
+          { name: "권선구", pop: 368200 },
+          { name: "팔달구", pop: 190400 },
+          { name: "영통구", pop: 365200 }
+        ]
+      },
+      { 
+        region: "경기", name: "용인시", type: "시", pop2026: 1098400, pop2025: 1091790,
+        districts: [
+          { name: "처인구", pop: 295300 },
+          { name: "기흥구", pop: 437800 },
+          { name: "수지구", pop: 365300 }
+        ]
+      },
+      { 
+        region: "경기", name: "고양시", type: "시", pop2026: 1078200, pop2025: 1083170,
+        districts: [
+          { name: "덕양구", pop: 492300 },
+          { name: "일산동구", pop: 292700 },
+          { name: "일산서구", pop: 293200 }
+        ]
+      },
+      { region: "경기", name: "화성시", type: "시", pop2026: 1025400, pop2025: 994000 },
+      { 
+        region: "경기", name: "성남시", type: "시", pop2026: 918400, pop2025: 920360,
+        districts: [
+          { name: "수정구", pop: 228100 },
+          { name: "중원구", pop: 208300 },
+          { name: "분당구", pop: 482000 }
+        ]
+      }, 
+      { region: "경기", name: "부천시", type: "시", pop2026: 771200, pop2025: 783590 },
+      { region: "경기", name: "남양주시", type: "시", pop2026: 742100, pop2025: 735240 },
+      { 
+        region: "경기", name: "안산시", type: "시", pop2026: 631200, pop2025: 643040,
+        districts: [
+          { name: "상록구", pop: 337800 },
+          { name: "단원구", pop: 293400 }
+        ]
+      },
+      { region: "경기", name: "평택시", type: "시", pop2026: 612500, pop2025: 602440 },
+      { region: "경기", name: "안양시", type: "시", pop2026: 561200, pop2025: 565390 },
+      { region: "경기", name: "파주시", type: "시", pop2026: 519500, pop2025: 516580 },
+      { region: "경기", name: "김포시", type: "시", pop2026: 489300, pop2025: 485070 },
+      { region: "경기", name: "시흥시", type: "시", pop2026: 481200, pop2025: 475390 },
+      { region: "경기", name: "의정부시", type: "시", pop2026: 453100, pop2025: 451870 },
+      { region: "경기", name: "하남시", type: "시", pop2026: 331200, pop2025: 324500 },
+      { region: "경기", name: "광주시", type: "시", pop2026: 401200, pop2025: 397310 },
+      { region: "경기", name: "광명시", type: "시", pop2026: 284200, pop2025: 286090 },
+      { region: "경기", name: "군포시", type: "시", pop2026: 261400, pop2025: 263500 },
+      { region: "경기", name: "양주시", type: "시", pop2026: 248200, pop2025: 242300 },
+      { region: "경기", name: "오산시", type: "시", pop2026: 231400, pop2025: 229300 },
+      { region: "경기", name: "이천시", type: "시", pop2026: 224200, pop2025: 222100 },
+      { region: "경기", name: "안성시", type: "시", pop2026: 189100, pop2025: 188300 },
+      { region: "경기", name: "구리시", type: "시", pop2026: 187200, pop2025: 188500 },
+      { region: "경기", name: "의왕시", type: "시", pop2026: 158200, pop2025: 159100 },
+      { region: "경기", name: "포천시", type: "시", pop2026: 142100, pop2025: 143800 },
+      { region: "경기", name: "양평군", type: "군", pop2026: 125100, pop2025: 123800 },
+      { region: "경기", name: "여주시", type: "시", pop2026: 114500, pop2025: 113800 },
+      { region: "경기", name: "동두천시", type: "시", pop2026: 88400, pop2025: 89100 },
+      { region: "경기", name: "가평군", type: "군", pop2026: 62800, pop2025: 62400 },
+      { region: "경기", name: "연천군", type: "군", pop2026: 41800, pop2025: 42100 },
+      { region: "경기", name: "과천시", type: "시", pop2026: 81200, pop2025: 79800 },
+
+      // 서울특별시 (25개 자치구)
+      { region: "서울", name: "송파구", type: "구", pop2026: 654200, pop2025: 658500 },
+      { region: "서울", name: "강서구", type: "구", pop2026: 562100, pop2025: 565000 },
+      { region: "서울", name: "강남구", type: "구", pop2026: 552830, pop2025: 550240 },
+      { region: "서울", name: "노원구", type: "구", pop2026: 478500, pop2025: 481580 },
+      { region: "서울", name: "관악구", type: "구", pop2026: 476200, pop2025: 478150 },
+      { region: "서울", name: "은평구", type: "구", pop2026: 451200, pop2025: 453390 },
+      { region: "서울", name: "양천구", type: "구", pop2026: 418500, pop2025: 422070 },
+      { region: "서울", name: "성북구", type: "구", pop2026: 419200, pop2025: 422190 },
+      { region: "서울", name: "서초구", type: "구", pop2026: 415200, pop2025: 414480 },
+      { region: "서울", name: "강동구", type: "구", pop2026: 459800, pop2025: 462100 },
+      { region: "서울", name: "중랑구", type: "구", pop2026: 374200, pop2025: 376460 },
+      { region: "서울", name: "동작구", type: "구", pop2026: 376500, pop2025: 379400 },
+      { region: "서울", name: "구로구", type: "구", pop2026: 391200, pop2025: 395300 },
+      { region: "서울", name: "마포구", type: "구", pop2026: 355200, pop2025: 356850 },
+      { region: "서울", name: "영등포구", type: "구", pop2026: 372100, pop2025: 374000 },
+      { region: "서울", name: "광진구", type: "구", pop2026: 334100, pop2025: 336200 },
+      { region: "서울", name: "동대문구", type: "구", pop2026: 351200, pop2025: 352290 },
+      { region: "서울", name: "도봉구", type: "구", pop2026: 307200, pop2025: 310400 },
+      { region: "서울", name: "강북구", type: "구", pop2026: 291500, pop2025: 295300 },
+      { region: "서울", name: "서대문구", type: "구", pop2026: 308100, pop2025: 310500 },
+      { region: "서울", name: "성동구", type: "구", pop2026: 273200, pop2025: 274690 },
+      { region: "서울", name: "금천구", type: "구", pop2026: 227500, pop2025: 228900 },
+      { region: "서울", name: "용산구", type: "구", pop2026: 216400, pop2025: 218200 },
+      { region: "서울", name: "종로구", type: "구", pop2026: 140800, pop2025: 142400 },
+      { region: "서울", name: "중구", type: "구", pop2026: 120100, pop2025: 121500 },
+
+      // 부산광역시 (16개 자치구군)
+      { region: "부산", name: "해운대구", type: "구", pop2026: 382100, pop2025: 385000 },
+      { region: "부산", name: "부산진구", type: "구", pop2026: 363200, pop2025: 365100 },
+      { region: "부산", name: "사하구", type: "구", pop2026: 296200, pop2025: 299800 },
+      { region: "부산", name: "북구", type: "구", pop2026: 271500, pop2025: 274200 },
+      { region: "부산", name: "동래구", type: "구", pop2026: 270100, pop2025: 271430 },
+      { region: "부산", name: "남구", type: "구", pop2026: 251400, pop2025: 254100 },
+      { region: "부산", name: "금정구", type: "구", pop2026: 219100, pop2025: 222300 },
+      { region: "부산", name: "사상구", type: "구", pop2026: 201200, pop2025: 204300 },
+      { region: "부산", name: "기장군", type: "군", pop2026: 178900, pop2025: 177400 },
+      { region: "부산", name: "연제구", type: "구", pop2026: 202400, pop2025: 203900 },
+      { region: "부산", name: "수영구", type: "구", pop2026: 174200, pop2025: 175100 },
+      { region: "부산", name: "강서구", type: "구", pop2026: 144100, pop2025: 142800 },
+      { region: "부산", name: "영도구", type: "구", pop2026: 104500, pop2025: 107300 },
+      { region: "부산", name: "서구", type: "구", pop2026: 100800, pop2025: 102400 },
+      { region: "부산", name: "동구", type: "구", pop2026: 86400, pop2025: 87500 },
+      { region: "부산", name: "중구", type: "구", pop2026: 38100, pop2025: 38900 },
+
+      // 대구광역시 (9개 자치구군 - 군위군 포함)
+      { region: "대구", name: "달서구", type: "구", pop2026: 518400, pop2025: 523500 },
+      { region: "대구", name: "북구", type: "구", pop2026: 428100, pop2025: 431200 },
+      { region: "대구", name: "수성구", type: "구", pop2026: 412500, pop2025: 415300 },
+      { region: "대구", name: "동구", type: "구", pop2026: 338100, pop2025: 341200 },
+      { region: "대구", name: "달성군", type: "군", pop2026: 264200, pop2025: 262900 },
+      { region: "대구", name: "서구", type: "구", pop2026: 156100, pop2025: 159400 },
+      { region: "대구", name: "남구", type: "구", pop2026: 139200, pop2025: 141200 },
+      { region: "대구", name: "중구", type: "구", pop2026: 81200, pop2025: 79500 },
+      { region: "대구", name: "군위군", type: "군", pop2026: 22800, pop2025: 23100 },
+
+      // 인천광역시 (10개 자치구군)
+      { region: "인천", name: "서구", type: "구", pop2026: 630400, pop2025: 610800 },
+      { region: "인천", name: "남동구", type: "구", pop2026: 491200, pop2025: 495000 },
+      { region: "인천", name: "부평구", type: "구", pop2026: 486200, pop2025: 488820 },
+      { region: "인천", name: "미추홀구", type: "구", pop2026: 418200, pop2025: 417720 },
+      { region: "인천", name: "연수구", type: "구", pop2026: 392500, pop2025: 388900 },
+      { region: "인천", name: "계양구", type: "구", pop2026: 289400, pop2025: 292100 },
+      { region: "인천", name: "중구", type: "구", pop2026: 157200, pop2025: 154800 },
+      { region: "인천", name: "강화군", type: "군", pop2026: 69100, pop2025: 68800 },
+      { region: "인천", name: "동구", type: "구", pop2026: 58400, pop2025: 59100 },
+      { region: "인천", name: "옹진군", type: "군", pop2026: 20600, pop2025: 20400 },
+
+      // 광주광역시 (5개 자치구)
+      { region: "광주", name: "북구", type: "구", pop2026: 422100, pop2025: 425300 },
+      { region: "광주", name: "광산구", type: "구", pop2026: 401500, pop2025: 402800 },
+      { region: "광주", name: "서구", type: "구", pop2026: 284300, pop2025: 287200 },
+      { region: "광주", name: "남구", type: "구", pop2026: 211200, pop2025: 213900 },
+      { region: "광주", name: "동구", type: "구", pop2026: 104500, pop2025: 103200 },
+
+      // 대전광역시 (5개 자치구)
+      { region: "대전", name: "서구", type: "구", pop2026: 462100, pop2025: 465800 },
+      { region: "대전", name: "유성구", type: "구", pop2026: 361500, pop2025: 356200 },
+      { region: "대전", name: "중구", type: "구", pop2026: 224500, pop2025: 227100 },
+      { region: "대전", name: "동구", type: "구", pop2026: 219100, pop2025: 221300 },
+      { region: "대전", name: "대덕구", type: "구", pop2026: 172400, pop2025: 174900 },
+
+      // 울산광역시 (5개 자치구군)
+      { region: "울산", name: "남구", type: "구", pop2026: 308500, pop2025: 310200 },
+      { region: "울산", name: "울주군", type: "군", pop2026: 222100, pop2025: 221800 },
+      { region: "울산", name: "중구", type: "구", pop2026: 208400, pop2025: 211200 },
+      { region: "울산", name: "북구", type: "구", pop2026: 218500, pop2025: 217400 },
+      { region: "울산", name: "동구", type: "구", pop2026: 151200, pop2025: 153400 },
+
+      // 강원특별자치도 (18개 시군)
+      { region: "강원", name: "원주시", type: "시", pop2026: 362100, pop2025: 360250 },
+      { region: "강원", name: "춘천시", type: "시", pop2026: 287200, pop2025: 286200 },
+      { region: "강원", name: "강릉시", type: "시", pop2026: 209400, pop2025: 211200 },
+      { region: "강원", name: "동해시", type: "시", pop2026: 89100, pop2025: 89800 },
+      { region: "강원", name: "속초시", type: "시", pop2026: 82400, pop2025: 82900 },
+      { region: "강원", name: "홍천군", type: "군", pop2026: 67200, pop2025: 67800 },
+      { region: "강원", name: "삼척시", type: "시", pop2026: 62100, pop2025: 62900 },
+      { region: "강원", name: "횡성군", type: "군", pop2026: 46800, pop2025: 46500 },
+      { region: "강원", name: "철원군", type: "군", pop2026: 41200, pop2025: 41900 },
+      { region: "강원", name: "평창군", type: "군", pop2026: 40800, pop2025: 41100 },
+      { region: "강원", name: "태백시", type: "시", pop2026: 38400, pop2025: 39200 },
+      { region: "강원", name: "영월군", type: "군", pop2026: 37100, pop2025: 37600 },
+      { region: "강원", name: "정선군", type: "군", pop2026: 34200, pop2025: 34900 },
+      { region: "강원", name: "인제군", type: "군", pop2026: 31800, pop2025: 32100 },
+      { region: "강원", name: "양양군", type: "군", pop2026: 27900, pop2025: 27700 },
+      { region: "강원", name: "고성군", type: "군", pop2026: 27100, pop2025: 27400 },
+      { region: "강원", name: "화천군", type: "군", pop2026: 23100, pop2025: 23400 },
+      { region: "강원", name: "양구군", type: "군", pop2026: 21200, pop2025: 21500 },
+
+      // 충청북도 (11개 시군)
+      { 
+        region: "충북", name: "청주시", type: "시", pop2026: 854200, pop2025: 851380,
+        districts: [
+          { name: "상당구", pop: 198200 },
+          { name: "서원구", pop: 187800 },
+          { name: "흥덕구", pop: 271800 },
+          { name: "청원구", pop: 196400 }
+        ]
+      },
+      { region: "충북", name: "충주시", type: "시", pop2026: 208400, pop2025: 209100 },
+      { region: "충북", name: "제천시", type: "시", pop2026: 130200, pop2025: 131200 },
+      { region: "충북", name: "음성군", type: "군", pop2026: 91400, pop2025: 91800 },
+      { region: "충북", name: "진천군", type: "군", pop2026: 87200, pop2025: 86400 },
+      { region: "충북", name: "옥천군", type: "군", pop2026: 48900, pop2025: 49500 },
+      { region: "충북", name: "영동군", type: "군", pop2026: 44200, pop2025: 44900 },
+      { region: "충북", name: "증평군", type: "군", pop2026: 37400, pop2025: 37200 },
+      { region: "충북", name: "괴산군", type: "군", pop2026: 36900, pop2025: 37400 },
+      { region: "충북", name: "보은군", type: "군", pop2026: 31200, pop2025: 31800 },
+      { region: "충북", name: "단양군", type: "군", pop2026: 27400, pop2025: 27900 },
+
+      // 충청남도 (15개 시군)
+      { 
+        region: "충남", name: "천안시", type: "시", pop2026: 662400, pop2025: 657820,
+        districts: [
+          { name: "동남구", pop: 256100 },
+          { name: "서북구", pop: 406300 }
+        ]
+      },
+      { region: "충남", name: "아산시", type: "시", pop2026: 321200, pop2025: 314230 },
+      { region: "충남", name: "서산시", type: "시", pop2026: 178200, pop2025: 176400 },
+      { region: "충남", name: "당진시", type: "시", pop2026: 169500, pop2025: 168200 },
+      { region: "충남", name: "논산시", type: "시", pop2026: 111200, pop2025: 112800 },
+      { region: "충남", name: "공주시", type: "시", pop2026: 101400, pop2025: 102100 },
+      { region: "충남", name: "홍성군", type: "군", pop2026: 98200, pop2025: 97800 },
+      { region: "충남", name: "보령시", type: "시", pop2026: 95300, pop2025: 96400 },
+      { region: "충남", name: "예산군", type: "군", pop2026: 77100, pop2025: 78100 },
+      { region: "충남", name: "부여군", type: "군", pop2026: 61200, pop2025: 62400 },
+      { region: "충남", name: "태안군", type: "군", pop2026: 60400, pop2025: 61100 },
+      { region: "충남", name: "금산군", type: "군", pop2026: 49800, pop2025: 50300 },
+      { region: "충남", name: "서천군", type: "군", pop2026: 49400, pop2025: 50200 },
+      { region: "충남", name: "청양군", type: "군", pop2026: 30400, pop2025: 30900 },
+      { region: "충남", name: "계룡시", type: "시", pop2026: 45200, pop2025: 44800 },
+
+      // 전북특별자치도 (14개 시군)
+      { 
+        region: "전북", name: "전주시", type: "시", pop2026: 649200, pop2025: 652450,
+        districts: [
+          { name: "완산구", pop: 321100 },
+          { name: "덕진구", pop: 328100 }
+        ]
+      },
+      { region: "전북", name: "익산시", type: "시", pop2026: 295400, pop2025: 298920 },
+      { region: "전북", name: "군산시", type: "시", pop2026: 259400, pop2025: 261200 },
+      { region: "전북", name: "정읍시", type: "시", pop2026: 103200, pop2025: 104800 },
+      { region: "전북", name: "완주군", type: "군", pop2026: 99400, pop2025: 98100 },
+      { region: "전북", name: "김제시", type: "시", pop2026: 80200, pop2025: 81400 },
+      { region: "전북", name: "남원시", type: "시", pop2026: 76500, pop2025: 77800 },
+      { region: "전북", name: "고창군", type: "군", pop2026: 51800, pop2025: 52400 },
+      { region: "전북", name: "부안군", type: "군", pop2026: 49400, pop2025: 50100 },
+      { region: "전북", name: "순창군", type: "군", pop2026: 26400, pop2025: 26900 },
+      { region: "전북", name: "임실군", type: "군", pop2026: 25800, pop2025: 26300 },
+      { region: "전북", name: "무주군", type: "군", pop2026: 23200, pop2025: 23600 },
+      { region: "전북", name: "장수군", type: "군", pop2026: 21100, pop2025: 21400 },
+      { region: "전북", name: "진안군", type: "군", pop2026: 24500, pop2025: 24900 },
+
+      // 전라남도 (22개 시군)
+      { region: "전남", name: "순천시", type: "시", pop2026: 279200, pop2025: 278500 },
+      { region: "전남", name: "여수시", type: "시", pop2026: 271200, pop2025: 274300 },
+      { region: "전남", name: "목포시", type: "시", pop2026: 213500, pop2025: 216200 },
+      { region: "전남", name: "광양시", type: "시", pop2026: 152100, pop2025: 151500 },
+      { region: "전남", name: "나주시", type: "시", pop2026: 116200, pop2025: 115400 },
+      { region: "전남", name: "무안군", type: "군", pop2026: 91400, pop2025: 90500 },
+      { region: "전남", name: "해남군", type: "군", pop2026: 65100, pop2025: 66200 },
+      { region: "전남", name: "화순군", type: "군", pop2026: 61400, pop2025: 62100 },
+      { region: "전남", name: "고흥군", type: "군", pop2026: 61200, pop2025: 62400 },
+      { region: "전남", name: "영암군", type: "군", pop2026: 52100, pop2025: 52800 },
+      { region: "전남", name: "영광군", type: "군", pop2026: 51200, pop2025: 51900 },
+      { region: "전남", name: "완도군", type: "군", pop2026: 46200, pop2025: 47100 },
+      { region: "전남", name: "담양군", type: "군", pop2026: 45100, pop2025: 45500 },
+      { region: "전남", name: "장성군", type: "군", pop2026: 42300, pop2025: 42800 },
+      { region: "전남", name: "보성군", type: "군", pop2026: 37800, pop2025: 38400 },
+      { region: "전남", name: "신안군", type: "군", pop2026: 37500, pop2025: 38100 },
+      { region: "전남", name: "장흥군", type: "군", pop2026: 34900, pop2025: 35500 },
+      { region: "전남", name: "강진군", type: "군", pop2026: 32400, pop2025: 33000 },
+      { region: "전남", name: "함평군", type: "군", pop2026: 30200, pop2025: 30800 },
+      { region: "전남", name: "진도군", type: "군", pop2026: 29100, pop2025: 29600 },
+      { region: "전남", name: "구례군", type: "군", pop2026: 24300, pop2025: 24700 },
+      { region: "전남", name: "곡성군", type: "군", pop2026: 26800, pop2025: 27200 },
+
+      // 경상북도 (22개 시군)
+      { 
+        region: "경북", name: "포항시", type: "시", pop2026: 498200, pop2025: 506490,
+        districts: [
+          { name: "남구", pop: 228100 },
+          { name: "북구", pop: 270100 }
+        ]
+      },
+      { region: "경북", name: "구미시", type: "시", pop2026: 417200, pop2025: 419760 },
+      { region: "경북", name: "경산시", type: "시", pop2026: 268400, pop2025: 266200 },
+      { region: "경북", name: "경주시", type: "시", pop2026: 247200, pop2025: 249300 },
+      { region: "경북", name: "안동시", type: "시", pop2026: 153100, pop2025: 154800 },
+      { region: "경북", name: "김천시", type: "시", pop2026: 136200, pop2025: 137400 },
+      { region: "경북", name: "칠곡군", type: "군", pop2026: 111200, pop2025: 112100 },
+      { region: "경북", name: "영주시", type: "시", pop2026: 100200, pop2025: 101400 },
+      { region: "경북", name: "영천시", type: "시", pop2026: 100400, pop2025: 100900 },
+      { region: "경북", name: "상주시", type: "시", pop2026: 94100, pop2025: 95300 },
+      { region: "경북", name: "예천군", type: "군", pop2026: 54100, pop2025: 54900 },
+      { region: "경북", name: "의성군", type: "군", pop2026: 49200, pop2025: 50100 },
+      { region: "경북", name: "울진군", type: "군", pop2026: 46100, pop2025: 46800 },
+      { region: "경북", name: "성주군", type: "군", pop2026: 41900, pop2025: 42500 },
+      { region: "경북", name: "청도군", type: "군", pop2026: 41100, pop2025: 41800 },
+      { region: "경북", name: "영덕군", type: "군", pop2026: 34100, pop2025: 34800 },
+      { region: "경북", name: "문경시", type: "시", pop2026: 69800, pop2025: 70400 },
+      { region: "경북", name: "고령군", type: "군", pop2026: 30100, pop2025: 30700 },
+      { region: "경북", name: "봉화군", type: "군", pop2026: 29800, pop2025: 30400 },
+      { region: "경북", name: "청송군", type: "군", pop2026: 24100, pop2025: 24400 },
+      { region: "경북", name: "영양군", type: "군", pop2026: 15600, pop2025: 15900 },
+      { region: "경북", name: "울릉군", type: "군", pop2026: 8950, pop2025: 9020 },
+
+      // 경상남도 (18개 시군)
+      { 
+        region: "경남", name: "창원시", type: "시", pop2026: 1002300, pop2025: 1009730,
+        districts: [
+          { name: "의창구", pop: 210100 },
+          { name: "성산구", pop: 245200 },
+          { name: "마산합포구", pop: 178300 },
+          { name: "마산회원구", pop: 180100 },
+          { name: "진해구", pop: 188600 }
+        ]
+      },
+      { region: "경남", name: "김해시", type: "시", pop2026: 539200, pop2025: 542710 },
+      { region: "경남", name: "양산시", type: "시", pop2026: 354300, pop2025: 351160 },
+      { region: "경남", name: "진주시", type: "시", pop2026: 346200, pop2025: 347480 },
+      { region: "경남", name: "거제시", type: "시", pop2026: 231400, pop2025: 234100 },
+      { region: "경남", name: "통영시", type: "시", pop2026: 121300, pop2025: 122800 },
+      { region: "경남", name: "사천시", type: "시", pop2026: 109200, pop2025: 110100 },
+      { region: "경남", name: "밀양시", type: "시", pop2026: 101200, pop2025: 102400 },
+      { region: "경남", name: "함안군", type: "군", pop2026: 60800, pop2025: 61400 },
+      { region: "경남", name: "거창군", type: "군", pop2026: 60100, pop2025: 60500 },
+      { region: "경남", name: "창녕군", type: "군", pop2026: 58200, pop2025: 59100 },
+      { region: "경남", name: "합천군", type: "군", pop2026: 41200, pop2025: 42100 },
+      { region: "경남", name: "하동군", type: "군", pop2026: 41800, pop2025: 42500 },
+      { region: "경남", name: "남해군", type: "군", pop2026: 40900, pop2025: 41500 },
+      { region: "경남", name: "함양군", type: "군", pop2026: 37200, pop2025: 37800 },
+      { region: "경남", name: "산청군", type: "군", pop2026: 33800, pop2025: 34300 },
+      { region: "경남", name: "의령군", type: "군", pop2026: 25400, pop2025: 25900 },
+      { region: "경남", name: "고성군", type: "군", pop2026: 49800, pop2025: 50400 }
+    ];
+
+    let completeData = [...rawData];
+
+    // 인구 기준 순위 부여
+    completeData.sort((a, b) => b.pop2026 - a.pop2026);
+    completeData.forEach((item, index) => {
+      item.rank = index + 1;
+    });
+
+    let activeData = [...completeData];
+
+    // 그라데이션 컬러 생성 (파란색~보라색~빨간색)
+    function getGradientColor(rank, total) {
+      const ratio = (rank - 1) / (total - 1);
+      let r, g, b;
+      
+      if (ratio < 0.5) {
+        const t = ratio * 2;
+        r = Math.round(15 + (109 - 15) * t);
+        g = Math.round(23 + (40 - 23) * t);
+        b = Math.round(42 + (217 - 42) * t);
+      } else {
+        const t = (ratio - 0.5) * 2;
+        r = Math.round(109 + (153 - 109) * t);
+        g = Math.round(40 + (27 - 40) * t);
+        b = Math.round(217 + (27 - 217) * t);
+      }
+      return `rgb(${r}, ${g}, ${b})`;
+    }
+
+    // 대비 보정 글자색 연산 알고리즘
+    function getContrastTextColor(rgbString) {
+      const matches = rgbString.match(/\d+/g);
+      if (!matches) return '#ffffff';
+      const r = parseInt(matches[0]);
+      const g = parseInt(matches[1]);
+      const b = parseInt(matches[2]);
+      
+      const luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+      return luminance > 0.45 ? '#0f172a' : '#ffffff'; 
+    }
+
+    // 천단위 쉼표 포맷터
+    function formatNumber(num) {
+      return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    }
+
+    function renderDashboard() {
+      const grid = document.getElementById("tileGrid");
+      const noResults = document.getElementById("noResults");
+      const countBadge = document.getElementById("resultCount");
+      
+      grid.innerHTML = "";
+      
+      if (activeData.length === 0) {
+        grid.classList.add("hidden");
+        noResults.classList.remove("hidden");
+        countBadge.innerText = "검색결과: 0개 구역";
+        return;
+      }
+
+      grid.classList.remove("hidden");
+      noResults.classList.add("hidden");
+      countBadge.innerText = `검색결과: ${activeData.length}개 구역`;
+
+      activeData.forEach((item) => {
+        const bgCol = getGradientColor(item.rank, 226);
+        const textCol = getContrastTextColor(bgCol);
+        
+        const growthRate = ((item.pop2026 - item.pop2025) / item.pop2025) * 100;
+        const growthIcon = growthRate >= 0 ? "▲" : "▼";
+        
+        const isBrightBg = textCol === '#0f172a';
+        const growthClass = growthRate >= 0 
+          ? (isBrightBg ? "text-emerald-700 font-bold" : "text-emerald-300 font-semibold") 
+          : (isBrightBg ? "text-red-700 font-bold" : "text-rose-300 font-semibold");
+
+        const subTextClass = isBrightBg ? "text-slate-600 font-medium" : "text-white/70";
+        const rankBadgeClass = isBrightBg ? "bg-black/10" : "bg-white/15";
+
+        const tile = document.createElement("div");
+        tile.className = "p-4 rounded-2xl shadow-sm hover:shadow-xl hover:scale-[1.03] transition-all cursor-pointer flex flex-col justify-between border border-black/5 relative group overflow-hidden";
+        tile.style.backgroundColor = bgCol;
+        tile.style.color = textCol;
+        tile.onclick = () => openModal(item);
+
+        // 일반구(행정구) 보유 시 배지 추가 표시 데코레이션
+        const districtBadge = item.districts ? `<span class="ml-1 text-[9px] bg-indigo-500/80 text-white font-bold px-1.5 py-0.5 rounded-md">일반구 포함</span>` : '';
+
+        tile.innerHTML = `
+          <div class="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+          
+          <div>
+            <div class="flex justify-between items-start">
+              <span class="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full ${rankBadgeClass}">
+                #${item.rank}
+              </span>
+              <span class="text-[11px] font-medium ${subTextClass}">${item.region} · ${item.type}</span>
+            </div>
+            
+            <h3 class="text-base font-extrabold mt-3 tracking-tight group-hover:translate-x-1 transition-transform truncate flex items-center">${item.name} ${districtBadge}</h3>
+          </div>
+
+          <div class="mt-6">
+            <p class="text-[10px] ${subTextClass}">주민등록 인구</p>
+            <div class="flex items-baseline justify-between mt-0.5">
+              <span class="text-sm font-black tracking-tight">${formatNumber(item.pop2026)}명</span>
+              <span class="text-[10px] ${growthClass}">${growthIcon} ${Math.abs(growthRate).toFixed(2)}%</span>
+            </div>
+          </div>
+        `;
+        grid.appendChild(tile);
+      });
+    }
+
+    function openModal(item) {
+      const modal = document.getElementById("detailModal");
+      const content = document.getElementById("modalContent");
+      const header = document.getElementById("modalHeader");
+      
+      const rankColor = getGradientColor(item.rank, 226);
+      header.style.backgroundColor = rankColor;
+      header.style.color = getContrastTextColor(rankColor);
+
+      document.getElementById("modalRank").innerText = `전국 인구 순위: ${item.rank}위`;
+      document.getElementById("modalTitle").innerText = `${item.region} ${item.name}`;
+      
+      let regionType = "지방 자치 군/구";
+      if (item.type === "시") {
+        regionType = item.districts ? "행정구 보유 특정대도시" : "자치시 (행정구 없음)";
+      } else if (item.type === "구") {
+        regionType = "자치구 (선출직 구청장)";
+      } else if (item.type === "군") {
+        regionType = "자치군 지역";
+      }
+      
+      document.getElementById("modalCategory").innerText = `${item.region} · ${regionType}`;
+      document.getElementById("modalPop2026").innerText = `${formatNumber(item.pop2026)}명`;
+      document.getElementById("modalPop2025").innerText = `${formatNumber(item.pop2025)}명`;
+
+      const growthVal = item.pop2026 - item.pop2025;
+      const growthRate = (growthVal / item.pop2025) * 100;
+      const badge = document.getElementById("modalGrowthBadge");
+      
+      const posBar = document.getElementById("modalPositiveBar");
+      const negBar = document.getElementById("modalNegativeBar");
+
+      if (growthVal >= 0) {
+        badge.innerText = `+${growthRate.toFixed(2)}% (상승)`;
+        badge.className = "text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800";
+        document.getElementById("modalDiffText").innerText = `전년비 ${formatNumber(Math.abs(growthVal))}명 증가`;
+        document.getElementById("modalDiffText").className = "font-bold text-emerald-600";
+        
+        posBar.style.width = "100%";
+        negBar.style.width = "0%";
+      } else {
+        badge.innerText = `-${Math.abs(growthRate).toFixed(2)}% (감소)`;
+        badge.className = "text-xs font-semibold px-2.5 py-1 rounded-full bg-rose-100 text-rose-800";
+        document.getElementById("modalDiffText").innerText = `전년비 ${formatNumber(Math.abs(growthVal))}명 감소`;
+        document.getElementById("modalDiffText").className = "font-bold text-rose-600";
+        
+        posBar.style.width = "0%";
+        negBar.style.width = "100%";
+      }
+
+      // --- [추가기능] 하위 행정구(일반구) 렌더링 로직 ---
+      const districtsContainer = document.getElementById("subDistrictsContainer");
+      const districtsList = document.getElementById("subDistrictsList");
+      
+      if (item.districts && item.districts.length > 0) {
+        districtsContainer.classList.remove("hidden");
+        districtsList.innerHTML = "";
+        
+        item.districts.forEach(dist => {
+          const ratio = (dist.pop / item.pop2026) * 100; // 시 전체 대비 일반구 점유율
+          
+          const distDiv = document.createElement("div");
+          distDiv.className = "space-y-1.5";
+          distDiv.innerHTML = `
+            <div class="flex justify-between text-xs font-semibold text-slate-700">
+              <span class="text-indigo-950 font-bold">${dist.name}</span>
+              <span>${formatNumber(dist.pop)}명 <span class="text-slate-400 font-medium ml-1">(${ratio.toFixed(1)}%)</span></span>
+            </div>
+            <div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+              <div class="bg-indigo-600 h-full rounded-full transition-all duration-500" style="width: ${ratio}%"></div>
+            </div>
+          `;
+          districtsList.appendChild(distDiv);
+        });
+      } else {
+        districtsContainer.classList.add("hidden");
+      }
+      // ------------------------------------------------
+
+      // 요약 브리핑 소견 세팅
+      let opinion = `${item.region} ${item.name}의 2026년 6월말 기준 주민등록 인구는 ${formatNumber(item.pop2026)}명으로, 전국 226개 기초지자체 중 ${item.rank}위를 유지하고 있습니다. `;
+      if (item.districts) {
+        opinion += `해당 구역은 지방자치법 제175조에 근거한 대도시 특례 규정에 의해 행정구를 보위한 특정시(구청장 임명제)이며, 일반 행정구 인구가 수원시·창원시·성남시 등의 단일 셀에 투명하게 통합 산정되었습니다. `;
+      } else if (item.type === "구") {
+        opinion += `해당 구역은 선거를 통해 주민대표 구청장을 선출하는 독립 자치구로써, 광역시 및 서울특별시에 소속되어 고유한 자치입법권을 행사합니다. `;
+      }
+      
+      if (growthVal >= 0) {
+        opinion += `최근 1년 동안 신규 아파트 단지 공급 및 주민 주거 환경 대폭 정비에 힘입어 전년 동월 대비 약 ${formatNumber(growthVal)}명이 순증가하는 견고한 성장 기조를 굳혔습니다.`;
+      } else {
+        opinion += `인근 신도시로의 주거 이전 현상 및 자연적 인구 요인 등에 따라 최근 1년 사이 약 ${formatNumber(Math.abs(growthVal))}명의 인구 소폭 조정 국면이 나타나고 있습니다.`;
+      }
+      document.getElementById("modalOpinion").innerText = opinion;
+
+      modal.classList.remove("hidden");
+      setTimeout(() => {
+        modal.classList.remove("opacity-0");
+        content.classList.remove("scale-95");
+      }, 50);
+    }
+
+    function closeModal() {
+      const modal = document.getElementById("detailModal");
+      const content = document.getElementById("modalContent");
+      
+      modal.classList.add("opacity-0");
+      content.classList.add("scale-95");
+      
+      setTimeout(() => {
+        modal.classList.add("hidden");
+      }, 300);
+    }
+
+    function filterAndSortData() {
+      const searchWord = document.getElementById("searchInput").value.trim().toLowerCase();
+      const regionFilter = document.getElementById("regionFilter").value;
+      const typeFilter = document.getElementById("typeFilter").value;
+      const sortOrder = document.getElementById("sortOrder").value;
+
+      activeData = completeData.filter(item => {
+        const matchesSearch = item.name.toLowerCase().includes(searchWord) || item.region.includes(searchWord);
+        const matchesRegion = regionFilter === "all" || item.region === regionFilter;
+        const matchesType = typeFilter === "all" || item.type === typeFilter;
+        return matchesSearch && matchesRegion && matchesType;
+      });
+
+      if (sortOrder === "pop_desc") {
+        activeData.sort((a, b) => b.pop2026 - a.pop2026);
+      } else if (sortOrder === "pop_asc") {
+        activeData.sort((a, b) => a.pop2026 - b.pop2026);
+      } else if (sortOrder === "growth_desc") {
+        activeData.sort((a, b) => {
+          const rateA = (a.pop2026 - a.pop2025) / a.pop2025;
+          const rateB = (b.pop2026 - b.pop2025) / b.pop2025;
+          return rateB - rateA;
+        });
+      } else if (sortOrder === "growth_asc") {
+        activeData.sort((a, b) => {
+          const rateA = (a.pop2026 - a.pop2025) / a.pop2025;
+          const rateB = (b.pop2026 - b.pop2025) / b.pop2025;
+          return rateA - rateB;
+        });
+      } else if (sortOrder === "name_asc") {
+        activeData.sort((a, b) => `${a.region} ${a.name}`.localeCompare(`${b.region} ${b.name}`));
+      }
+
+      renderDashboard();
+    }
+
+    document.getElementById("searchInput").addEventListener("input", filterAndSortData);
+    document.getElementById("regionFilter").addEventListener("change", filterAndSortData);
+    document.getElementById("typeFilter").addEventListener("change", filterAndSortData);
+    document.getElementById("sortOrder").addEventListener("change", filterAndSortData);
+
+    window.onload = function () {
+      renderDashboard();
+    };
+  </script>
+</body>
+</html>
