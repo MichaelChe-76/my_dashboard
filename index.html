@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>2026년 6월 기준 전국 기초자치단체 인구 대시보드</title>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+  
+  <style>
+    /* 브라우저 환경 표준화 및 외부 의존성 제거 스타일링 */
+    *, ::before, ::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: #f8fafc;
+      color: #334155;
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* 상단 헤더 스타일 */
+    header {
+      background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+      color: #ffffff;
+      padding: 40px 16px;
+      text-align: center;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    .header-badge {
+      display: inline-block;
+      background-color: rgba(99, 102, 241, 0.3);
+      color: #c7d2fe;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 16px;
+      border-radius: 50px;
+      letter-spacing: 0.05em;
+    }
+    header h1 {
+      font-size: 28px;
+      font-weight: 900;
+      margin-top: 12px;
+      letter-spacing: -0.025em;
+    }
+    @media (min-width: 768px) { header h1 { font-size: 36px; } }
+    header p { color: #cbd5e1; margin-top: 8px; font-size: 14px; }
+
+    /* 헤더 요약 카드 */
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      max-width: 896px;
+      margin: 32px auto 0 auto;
+      text-align: left;
+    }
+    @media (min-width: 768px) { .summary-grid { grid-template-columns: repeat(4, 1fr); } }
+    .summary-card {
+      background-color: rgba(255, 255, 255, 0.1);
+      padding: 16px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .summary-card p:first-child { font-size: 12px; color: #94a3b8; font-weight: 500; }
+    .summary-card p:last-child { font-size: 18px; font-weight: 700; margin-top: 4px; }
+
+    /* 메인 뷰포트 */
+    main {
+      flex-grow: 1;
+      max-width: 1280px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 32px 16px;
+    }
+
+    /* 컨트롤러 패널 */
+    .control-panel {
+      background-color: #ffffff;
+      padding: 24px;
+      border-radius: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      border: 1px solid #f1f5f9;
+      margin-bottom: 32px;
+    }
+    .control-flex {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      justify-content: space-between;
+    }
+    @media (min-width: 1024px) {
+      .control-flex { flex-direction: row; align-items: center; }
+    }
+    
+    .search-wrapper { position: relative; flex-grow: 1; max-width: 512px; width: 100%; }
+    .search-wrapper input {
+      width: 100%;
+      padding: 12px 16px 12px 40px;
+      background-color: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      font-size: 14px;
+      outline: none;
+      transition: all 0.2s;
+    }
+    .search-wrapper input:focus { border-color: #6366f1; box-shadow: 0 0 0 2px rgba(99,102,241,0.2); }
+    .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; width: 20px; height: 20px; }
+
+    .filter-group { display: flex; flex-wrap: wrap; gap: 8px; width: 100%; }
+    @media (min-width: 1024px) { .filter-group { width: auto; } }
+    .filter-group select {
+      background-color: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-size: 14px;
+      outline: none;
+      cursor: pointer;
+    }
+    .filter-group select:focus { border-color: #6366f1; }
+
+    /* 가이드 인디케이터 */
+    .guide-bar {
+      margin-top: 24px;
+      padding-top: 24px;
+      border-top: 1px solid #f1f5f9;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      font-size: 12px;
+      color: #64748b;
+    }
+    @media (min-width: 640px) { .guide-bar { flex-direction: row; } }
+    .color-guide { display: flex; align-items: center; gap: 8px; }
+    .color-strip { width: 150px; height: 12px; background: linear-gradient(to right, #0f172a, #6d28d9, #991b1b); border-radius: 9999px; }
+    #resultCount { font-weight: 600; color: #4f46e5; background-color: #e0e7ff; padding: 4px 10px; border-radius: 6px; }
+
+    /* 타일 그리드 레이아웃 */
+    #tileGrid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+    @media (min-width: 640px) { #tileGrid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+    @media (min-width: 768px) { #tileGrid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+    @media (min-width: 1024px) { #tileGrid { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+    @media (min-width: 1280px) { #tileGrid { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
+
+    /* 개별 대시보드 타일 */
+    .tile-card {
+      padding: 16px;
+      border-radius: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      transition: all 0.25s ease;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(0,0,0,0.05);
+    }
+    .tile-card:hover { transform: translateY(-4px); box-shadow: 0 12px 20px -8px rgba(0,0,0,0.15); }
+    .tile-header { display: flex; justify-content: space-between; align-items: center; }
+    .tile-rank { font-size: 10px; font-weight: 900; padding: 2px 6px; border-radius: 9999px; }
+    .tile-region { font-size: 11px; font-weight: 500; }
+    .tile-title { font-size: 16px; font-weight: 800; margin-top: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .tile-footer { margin-top: 24px; }
+    .tile-label { font-size: 10px; }
+    .tile-data-row { display: flex; justify-content: space-between; align-items: baseline; margin-top: 2px; }
+    .tile-pop { font-size: 14px; font-weight: 900; }
+    .tile-growth { font-size: 10px; font-weight: 700; }
+
+    /* 예외 처리 안내 */
+    .hidden { display: none !important; }
+    #noResults { text-align: center; padding: 80px 16px; background-color: #ffffff; border-radius: 16px; border: 1px solid #f1f5f9; }
+    #noResults h3 { font-size: 18px; color: #334155; font-weight: 700; margin-top: 16px; }
+    #noResults p { font-size: 14px; color: #64748b; margin-top: 4px; }
+
+    /* 미니 모달 팝업 레이아웃 */
+    #detailModal {
+      position: fixed;
+      inset: 0;
+      background-color: rgba(15, 23, 42, 0.75);
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      transition: opacity 0.3s ease;
+    }
+    .modal-box {
+      background-color: #ffffff;
+      border-radius: 16px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      max-width: 448px;
+      width: 100%;
+      overflow: hidden;
+      transform: scale(0.95);
+      transition: transform 0.3s ease;
