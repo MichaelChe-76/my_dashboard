@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>로또 6/45 자동 번호 생성기</title>
+    <style>
+        :root {
+            --color-yellow: #fbc400;
+            --color-blue: #69c8f2;
+            --color-red: #ff7272;
+            --color-gray: #aaa;
+            --color-green: #b0d840;
+            --color-dark: #333;
+            --primary-gradient: linear-gradient(135deg, #4a67ff, #314cdb);
+        }
+
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+            background-color: #f7f9fc;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: var(--color-dark);
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+            background: #ffffff;
+            padding: 30px 20px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            text-align: center;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            color: #222;
+            font-weight: 700;
+        }
+
+        /* 고급 조건 설정 영역 */
+        .strategy-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 25px;
+            text-align: left;
+        }
+
+        .strategy-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #475569;
+            margin-top: 0;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 12px;
+        }
+
+        .control-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .control-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #64748b;
+        }
+
+        /* 세그먼트 컨트롤 버튼 스타일 */
+        .segmented-control {
+            display: flex;
+            background: #e2e8f0;
+            border-radius: 10px;
+            padding: 2px;
+            gap: 2px;
+        }
+
+        .segment-option {
+            flex: 1;
+            position: relative;
+        }
+
+        .segment-option input[type="radio"] {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            border: 0;
+        }
+
+        .segment-option label {
+            display: block;
+            padding: 8px 0;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #475569;
+            background: transparent;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            user-select: none;
+        }
+
+        .segment-option input[type="radio"]:checked + label {
+            background: #ffffff;
+            color: #1e293b;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+        }
+
+        /* 번호 표시 영역 */
+        .result-container {
+            margin-bottom: 25px;
+            min-height: 50px;
+        }
+
+        .placeholder-text {
+            color: #94a3b8;
+            margin: 40px 0;
+            font-size: 0.95rem;
+        }
+
+        .lotto-set {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            padding: 12px;
+            background: #fafafa;
+            border-radius: 12px;
+            border: 1px solid #eee;
+        }
+
+        /* 로또 공 스타일 */
+        .ball {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: #fff;
+            text-shadow: 0px 1px 2px rgba(0,0,0,0.4);
+            box-shadow: inset -3px -3px 8px rgba(0,0,0,0.2), 2px 4px 6px rgba(0,0,0,0.1);
+            animation: popIn 0.4s ease-out both;
+        }
+
+        /* 공 색상 규격 */
+        .ball.num-1 { background-color: var(--color-yellow); }
+        .ball.num-11 { background-color: var(--color-blue); }
+        .ball.num-21 { background-color: var(--color-red); }
+        .ball.num-31 { background-color: var(--color-gray); }
+        .ball.num-41 { background-color: var(--color-green); }
+
+        /* 애니메이션 */
+        @keyframes popIn {
+            0% { transform: scale(0) rotate(-180deg); opacity: 0; }
+            70% { transform: scale(1.1); }
+            100% { transform: scale(1) rotate(0); opacity: 1; }
+        }
+
+        /* 버튼 그룹 */
+        .btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .btn {
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.15rem;
+            font-weight: 600;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            width: 100%;
+            max-width: 320px;
+            box-sizing: border-box;
+        }
+
+        .generate-btn {
+            background: var(--primary-gradient);
+            color: white;
+            box-shadow: 0 5px 15px rgba(74, 103, 255, 0.3);
+        }
+
+        .generate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 7px 20px rgba(74, 103, 255, 0.4);
+        }
+
+        .clear-btn {
+            background: #fce8e6;
+            color: #a51d24;
+            font-size: 1rem;
+            padding: 12px 40px;
+        }
+
+        .clear-btn:hover {
+            background: #fbe4e2;
+            color: #b31412;
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+        }
+
+        /* 이력 섹션 */
+        .history-section {
+            margin-top: 20px;
+            text-align: left;
+            border-top: 2px dashed #eee;
+            padding-top: 25px;
+        }
+
+        .history-section h2 {
+            font-size: 1.1rem;
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        .history-item {
+            background: #fff;
+            border: 1px solid #eef2f6;
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+            color: #777;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+            animation: popIn 0.3s ease-out;
+        }
+
+        .history-strategy-badge {
+            display: inline-block;
+            background: #f1f5f9;
+            color: #475569;
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 6px;
+            margin-bottom: 6px;
+        }
+
+        .history-bundles {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .history-row {
+            letter-spacing: 0.5px;
+            font-weight: 600;
+            color: #444;
+        }
+
+        /* 반응형 모바일 최적화 */
+        @media (max-width: 480px) {
+            .ball {
+                width: 38px;
+                height: 38px;
+                font-size: 0.95rem;
+            }
+            .lotto-set {
+                gap: 6px;
+                padding: 8px;
+            }
+            h1 { font-size: 1.5rem; }
+            .btn { font-size: 1.05rem; padding: 12px 30px; }
+            .clear-btn { font-size: 0.95rem; padding: 10px 30px; }
+            .segmented-control label {
+                font-size: 0.75rem;
+                padding: 6px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>로또 6/45 번호 생성기</h1>
+
+    <!-- 고급 조건 설정 필터 -->
+    <div class="strategy-card">
+        <div class="strategy-title">
+            <span>⚙️ 추출 조건 필터 설정</span>
+        </div>
+        
+        <!-- 최다 출현 옵션 -->
+        <div class="control-group">
+            <span class="control-label">🔥 최다 출현 번호 (Top 5) 포함 개수</span>
+            <div class="segmented-control">
+                <div class="segment-option">
+                    <input type="radio" id="max0" name="maxCount" value="0">
+                    <label for="max0">0개</label>
+                </div>
+                <div class="segment-option">
+                    <input type="radio" id="max1" name="maxCount" value="1" checked>
+                    <label for="max1">1개</label>
+                </div>
+                <div class="segment-option">
+                    <input type="radio" id="max2" name="maxCount" value="2">
+                    <label for="max2">2개</label>
+                </div>
+                <div class="segment-option">
+                    <input type="radio" id="maxRand" name="maxCount" value="random">
+                    <label for="maxRand">1~2개 랜덤</label>
+                </div>
+            </div>
+        </div>
+
+        <!-- 최소 출현 옵션 -->
+        <div class="control-group">
+            <span class="control-label">❄️ 최소 출현 번호 (Top 5) 포함 개수</span>
+            <div class="segmented-control">
+                <div class="segment-option">
+                    <input type="radio" id="min0" name="minCount" value="0">
+                    <label for="min0">0개</label>
+                </div>
+                <div class="segment-option">
+                    <input type="radio" id="min1" name="minCount" value="1" checked>
+                    <label for="min1">1개</label>
+                </div>
+                <div class="segment-option">
+                    <input type="radio" id="min2" name="minCount" value="2">
+                    <label for="min2">2개</label>
+                </div>
+                <div class="segment-option">
+                    <input type="radio" id="minRand" name="minCount" value="random">
+                    <label for="minRand">1~2개 랜덤</label>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 실시간 생성 결과 영역 -->
+    <div id="resultContainer" class="result-container">
+        <p class="placeholder-text">'번호 생성' 버튼을 누르면 통계 기반 번호 조합이 생성됩니다.</p>
+    </div>
+
+    <!-- 버튼 배치 영역 -->
+    <div class="btn-group">
+        <button id="generateBtn" class="btn generate-btn">번호 생성</button>
+        <button id="clearBtn" class="btn clear-btn">화면 및 이력 초기화</button>
+    </div>
+
+    <!-- 최근 생성 이력 영역 -->
+    <div class="history-section">
+        <h2>최근 생성 이력 (최대 5회)</h2>
+        <div id="historyContainer">
+            <p id="noHistoryText" style="color: #bbb; font-size: 0.9rem; text-align: center; margin: 20px 0;">이력이 없습니다.</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 동행복권 통계 기반 데이터 (최다/최소 출현 Top 5)
+    const TOP_MAX = [34, 18, 12, 27, 43];
+    const TOP_MIN = [9, 22, 23, 41, 30];
+
+    const generateBtn = document.getElementById('generateBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const resultContainer = document.getElementById('resultContainer');
+    const historyContainer = document.getElementById('historyContainer');
+
+    let historyList = [];
+
+    // 번호에 따른 공 색상 CSS 클래스 매핑
+    function getBallClass(num) {
+        if (num <= 10) return 'num-1';
+        if (num <= 20) return 'num-11';
+        if (num <= 30) return 'num-21';
+        if (num <= 40) return 'num-31';
+        return 'num-41';
+    }
+
+    // 최소~최대 정수 무작위 추출 함수
+    function getRandomInt(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    // 동적 생성 조건 필터 로직
+    function generateLottoSet(maxOption, minOption) {
+        const set = new Set();
+        
+        // 1. 최다 출현 개수 결정
+        let maxCount = 0;
+        if (maxOption === 'random') {
+            maxCount = getRandomInt(1, 2);
+        } else {
+            maxCount = parseInt(maxOption, 10);
+        }
+
+        // 2. 최소 출현 개수 결정
+        let minCount = 0;
+        if (minOption === 'random') {
+            minCount = getRandomInt(1, 2);
+        } else {
+            minCount = parseInt(minOption, 10);
+        }
+
+        // 3. 최다 출현 번호 무작위 셔플 후 지정 개수만큼 포함
+        const shuffledMax = [...TOP_MAX].sort(() => Math.random() - 0.5);
+        for (let i = 0; i < maxCount; i++) {
+            set.add(shuffledMax[i]);
+        }
+
+        // 4. 최소 출현 번호 무작위 셔플 후 지정 개수만큼 포함 (중복 자동 회피)
+        const shuffledMin = [...TOP_MIN].sort(() => Math.random() - 0.5);
+        let minAdded = 0;
+        for (let i = 0; i < shuffledMin.length; i++) {
+            if (minAdded >= minCount) break;
+            if (!set.has(shuffledMin[i])) {
+                set.add(shuffledMin[i]);
+                minAdded++;
+            }
+        }
+
+        // 5. 남은 칸을 일반 무작위 번호(1~45)로 가득 채움
+        while (set.size < 6) {
+            const randomNum = Math.floor(Math.random() * 45) + 1;
+            set.add(randomNum);
+        }
+
+        // 오름차순 정렬하여 최종 반환
+        return Array.from(set).sort((a, b) => a - b);
+    }
+
+    // 번호 생성 버튼 클릭 이벤트
+    generateBtn.addEventListener('click', () => {
+        resultContainer.innerHTML = ''; 
+        const currentBundle = [];
+
+        // 설정된 조건 값 실시간으로 파악
+        const maxOption = document.querySelector('input[name="maxCount"]:checked').value;
+        const minOption = document.querySelector('input[name="minCount"]:checked').value;
+
+        // 5세트 생성 및 화면 표시
+        for (let i = 0; i < 5; i++) {
+            const lottoNumbers = generateLottoSet(maxOption, minOption);
+            currentBundle.push(lottoNumbers);
+
+            const setDiv = document.createElement('div');
+            setDiv.classList.add('lotto-set');
+
+            lottoNumbers.forEach((num, index) => {
+                const ball = document.createElement('div');
+                ball.classList.add('ball', getBallClass(num));
+                ball.innerText = num;
+                // 우아한 등장 연출을 위한 차등 애니메이션 딜레이
+                ball.style.animationDelay = `${index * 0.04 + (i * 0.02)}s`; 
+                setDiv.appendChild(ball);
+            });
+
+            resultContainer.appendChild(setDiv);
+        }
+
+        // 선택한 전략 텍스트 포맷 구성
+        const strategyText = `최다:${getStrategyLabel(maxOption)} / 최소:${getStrategyLabel(minOption)}`;
+
+        updateHistory(currentBundle, strategyText);
+    });
+
+    // 조건 라벨 매핑용 헬퍼 함수
+    function getStrategyLabel(option) {
+        if (option === 'random') return '1~2개 랜덤';
+        return `${option}개`;
+    }
+
+    // 화면 및 이력 전체 초기화 버튼 클릭 이벤트
+    clearBtn.addEventListener('click', () => {
+        resultContainer.innerHTML = '<p class="placeholder-text">\'번호 생성\' 버튼을 누르면 통계 기반 번호 조합이 생성됩니다.</p>';
+        historyList = [];
+        historyContainer.innerHTML = '<p id="noHistoryText" style="color: #bbb; font-size: 0.9rem; text-align: center; margin: 20px 0;">이력이 없습니다.</p>';
+    });
+
+    // 이력 갱신 함수 (최대 5회)
+    function updateHistory(bundle, strategyText) {
+        const now = new Date();
+        const timeString = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+        
+        historyList.unshift({
+            time: timeString,
+            data: bundle,
+            strategy: strategyText
+        });
+
+        if (historyList.length > 5) {
+            historyList.pop();
+        }
+
+        historyContainer.innerHTML = '';
+        
+        historyList.forEach((item) => {
+            const historyItem = document.createElement('div');
+            historyItem.classList.add('history-item');
+            
+            let bundleHtml = `<div class="history-bundles">`;
+            item.data.forEach((nums, i) => {
+                bundleHtml += `<div class="history-row">세트 ${i+1}: ${nums.join(', ')}</div>`;
+            });
+            bundleHtml += `</div>`;
+
+            historyItem.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <strong>[${item.time}] 생성된 조합 (5세트)</strong>
+                    <span class="history-strategy-badge">${item.strategy}</span>
+                </div>
+                ${bundleHtml}
+            `;
+            historyContainer.appendChild(historyItem);
+        });
+    }
+</script>
+
+</body>
+</html>
