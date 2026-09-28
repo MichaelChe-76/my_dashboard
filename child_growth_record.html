@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>자녀 성장기록</title>
+<style>
+  :root{
+    --wall:#EAF0EA;
+    --wall-deep:#D7E3D6;
+    --paper:#F7F8F4;
+    --ink:#22301F;
+    --ink-soft:#5A6B57;
+    --line:#C7D2C3;
+    --wood:#C08A3E;
+    --wood-deep:#9C6C28;
+    --sky:#3E7480;
+    --sky-soft:#DCEAEC;
+    --coral:#C96A5C;
+    --coral-soft:#F3DEDA;
+    --danger:#B44B3E;
+    --radius:10px;
+    --font-serif:'Iowan Old Style','Noto Serif KR','Nanum Myeongjo',Georgia,serif;
+    --font-sans:'Pretendard','Apple SD Gothic Neo','Malgun Gothic','Segoe UI',sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;height:100%;}
+  body{
+    font-family:var(--font-sans);
+    background:var(--wall);
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+  }
+  button{font-family:inherit;cursor:pointer;}
+  input,select{font-family:inherit;}
+
+  /* ---------- 로그인 화면 ---------- */
+  #loginScreen{
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:
+      repeating-linear-gradient(180deg, transparent 0 38px, rgba(192,138,62,0.10) 38px 40px),
+      var(--wall);
+  }
+  .login-card{
+    width:340px;
+    background:var(--paper);
+    border-radius:var(--radius);
+    border-top:6px solid var(--wood);
+    box-shadow:0 18px 40px rgba(34,48,31,0.15);
+    padding:34px 32px 28px;
+  }
+  .login-card h1{
+    font-family:var(--font-serif);
+    font-size:26px;
+    margin:0 0 4px;
+    color:var(--ink);
+  }
+  .login-card p.sub{
+    margin:0 0 22px;
+    color:var(--ink-soft);
+    font-size:13px;
+    line-height:1.5;
+  }
+  .field{margin-bottom:14px;}
+  .field label{
+    display:block;
+    font-size:12px;
+    color:var(--ink-soft);
+    margin-bottom:5px;
+  }
+  .field input{
+    width:100%;
+    padding:10px 12px;
+    border:1px solid var(--line);
+    border-radius:7px;
+    background:#fff;
+    font-size:14px;
+    color:var(--ink);
+  }
+  .field input:focus{outline:2px solid var(--sky);outline-offset:1px;}
+  .btn-primary{
+    width:100%;
+    padding:11px;
+    border:none;
+    border-radius:7px;
+    background:var(--wood);
+    color:#fff;
+    font-size:14px;
+    font-weight:600;
+    margin-top:4px;
+  }
+  .btn-primary:hover{background:var(--wood-deep);}
+  .login-error{
+    color:var(--danger);
+    font-size:12.5px;
+    margin-top:10px;
+    min-height:16px;
+  }
+
+  /* ---------- 앱 레이아웃 ---------- */
+  #app{display:none;min-height:100vh;}
+  #app.visible{display:flex;}
+
+  .ruler-sidebar{
+    width:150px;
+    flex:0 0 150px;
+    background:
+      repeating-linear-gradient(180deg, transparent 0 28px, rgba(192,138,62,0.16) 28px 30px),
+      linear-gradient(180deg,var(--wall-deep),var(--wall));
+    border-right:1px solid var(--line);
+    display:flex;
+    flex-direction:column;
+    padding:20px 12px;
+    position:relative;
+  }
+  .ruler-title{
+    font-family:var(--font-serif);
+    font-size:15px;
+    color:var(--wood-deep);
+    margin:0 0 3px;
+    padding-left:2px;
+  }
+  .ruler-sub{
+    font-size:10.5px;
+    color:var(--ink-soft);
+    margin:0 0 16px;
+    padding-left:2px;
+  }
+  .child-tab{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    width:100%;
+    text-align:left;
+    padding:9px 10px;
+    margin-bottom:6px;
+    border:1px solid transparent;
+    border-radius:8px;
+    background:transparent;
+    color:var(--ink);
+    font-size:13.5px;
+  }
+  .child-tab .mark{
+    width:9px;height:9px;border-radius:50%;flex:0 0 auto;
+    background:var(--sky);
+  }
+  .child-tab.girl .mark{background:var(--coral);}
+  .child-tab:hover{background:rgba(255,255,255,0.6);}
+  .child-tab.active{
+    background:#fff;
+    border-color:var(--line);
+    box-shadow:0 2px 6px rgba(34,48,31,0.08);
+    font-weight:600;
+  }
+  .add-child-btn{
+    margin-top:6px;
+    padding:9px 10px;
+    border-radius:8px;
+    border:1px dashed var(--wood);
+    background:transparent;
+    color:var(--wood-deep);
+    font-size:13px;
+    font-weight:600;
+  }
+  .add-child-btn:hover{background:rgba(192,138,62,0.10);}
+  .sidebar-footer{
+    margin-top:auto;
+    padding-top:14px;
+    border-top:1px solid var(--line);
+  }
+  .logout-link{
+    background:none;border:none;color:var(--ink-soft);
+    font-size:12px;text-decoration:underline;padding:4px 2px;
+  }
+
+  .main{
+    flex:1;
+    min-width:0;
+    padding:28px 40px 60px;
+    max-width:920px;
+  }
+  .app-header{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    margin-bottom:22px;
+  }
+  .app-header h1{
+    font-family:var(--font-serif);
+    font-size:28px;
+    margin:0;
+  }
+  .app-header .today{
+    font-size:12.5px;
+    color:var(--ink-soft);
+  }
+
+  .card{
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:20px 22px;
+    margin-bottom:20px;
+  }
+  .card h2{
+    font-size:14px;
+    margin:0 0 14px;
+    color:var(--ink);
+    font-weight:700;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .card h2 .tick{
+    width:4px;height:14px;background:var(--wood);border-radius:2px;display:inline-block;
+  }
+
+  .empty-state{
+    text-align:center;
+    padding:30px 10px;
+    color:var(--ink-soft);
+    font-size:13.5px;
+  }
+
+  /* 기본정보 */
+  .info-grid{
+    display:grid;
+    grid-template-columns:1.3fr 1fr 1fr;
+    gap:14px;
+  }
+  .info-grid .field label{font-size:11.5px;}
+  .info-grid input,.info-grid select{
+    width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:#fff;font-size:13.5px;
+  }
+  .age-readout{
+    margin-top:10px;
+    font-size:12.5px;
+    color:var(--ink-soft);
+  }
+  .delete-child-btn{
+    background:none;border:1px solid var(--line);color:var(--danger);
+    font-size:11.5px;padding:5px 10px;border-radius:6px;margin-top:12px;
+  }
+  .delete-child-btn:hover{background:var(--coral-soft);}
+
+  /* 기록 입력 */
+  .record-form{
+    display:grid;
+    grid-template-columns:1fr 1fr 1fr auto;
+    gap:12px;
+    align-items:end;
+  }
+  .record-form .field{margin-bottom:0;}
+  .record-form input{
+    width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:#fff;font-size:13.5px;
+  }
+  .add-record-btn{
+    padding:9px 16px;
+    border:none;border-radius:6px;
+    background:var(--sky);color:#fff;font-size:13.5px;font-weight:600;
+    white-space:nowrap;
+  }
+  .add-record-btn:hover{background:#2f5c66;}
+
+  .growth-summary{
+    display:flex;
+    gap:24px;
+    margin-top:16px;
+    flex-wrap:wrap;
+  }
+  .summary-item{
+    background:var(--sky-soft);
+    border-radius:8px;
+    padding:10px 14px;
+    min-width:150px;
+  }
+  .summary-item .label{font-size:11px;color:var(--ink-soft);margin-bottom:2px;}
+  .summary-item .value{font-size:17px;font-weight:700;color:var(--ink);}
+  .summary-item .value .delta-up{color:var(--sky);}
+  .summary-item .value .delta-down{color:var(--danger);}
+
+  /* 차트 */
+  .chart-row{display:flex;gap:20px;flex-wrap:wrap;}
+  .chart-box{flex:1;min-width:280px;}
+  .chart-box .chart-title{font-size:12.5px;color:var(--ink-soft);margin-bottom:6px;}
+  canvas.growth-canvas{width:100%;height:220px;display:block;background:#fff;border-radius:8px;border:1px solid var(--line);}
+
+  /* 또래 비교 */
+  .compare-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:16px;
+  }
+  .compare-box{
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:14px 16px;
+    background:#fff;
+  }
+  .compare-box .metric{font-size:12px;color:var(--ink-soft);margin-bottom:6px;}
+  .compare-box .bignum{font-size:20px;font-weight:700;}
+  .compare-box .sub{font-size:12px;color:var(--ink-soft);margin-top:4px;}
+  .compare-date-row{
+    display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;
+    margin-bottom:4px;
+  }
+  .compare-date{font-size:12.5px;color:var(--ink);font-weight:600;}
+  .compare-hint{font-size:11px;color:var(--ink-soft);margin-bottom:12px;}
+  .jump-latest-btn{
+    background:none;border:1px solid var(--line);color:var(--sky);
+    font-size:11.5px;padding:4px 9px;border-radius:6px;
+  }
+  .jump-latest-btn:hover{background:var(--sky-soft);}
+
+  /* 기록 테이블 */
+  table.record-table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:13px;
+  }
+  table.record-table th{
+    text-align:left;
+    font-size:11px;
+    color:var(--ink-soft);
+    font-weight:600;
+    padding:6px 8px;
+    border-bottom:1px solid var(--line);
+  }
+  table.record-table td{
+    padding:7px 8px;
+    border-bottom:1px solid #EEF0EA;
+  }
+  table.record-table tr:last-child td{border-bottom:none;}
+  .record-row{cursor:pointer;}
+  .record-row:hover td{background:#F1F4EE;}
+  .record-row.selected td{background:var(--sky-soft);}
+  .del-record-btn{
+    background:none;border:none;color:var(--ink-soft);font-size:12px;
+  }
+  .del-record-btn:hover{color:var(--danger);}
+
+  @media (max-width:720px){
+    #app.visible{flex-direction:column;}
+    .ruler-sidebar{width:100%;flex:none;flex-direction:row;flex-wrap:wrap;padding:14px;}
+    .ruler-title,.ruler-sub{width:100%;}
+    .sidebar-footer{margin-top:8px;}
+    .main{padding:20px;}
+    .info-grid,.record-form,.compare-grid{grid-template-columns:1fr;}
+    .record-form .add-record-btn{width:100%;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ===================== 로그인 화면 ===================== -->
+<div id="loginScreen">
+  <div class="login-card">
+    <h1>자녀 성장기록</h1>
+    <p class="sub">총관리자 계정으로 로그인하세요.</p>
+    <div class="field">
+      <label for="loginUser">아이디</label>
+      <input type="text" id="loginUser" value="admin" autocomplete="username">
+    </div>
+    <div class="field">
+      <label for="loginPass">비밀번호</label>
+      <input type="password" id="loginPass" placeholder="비밀번호 입력" autocomplete="current-password">
+    </div>
+    <button class="btn-primary" id="loginBtn">로그인</button>
+    <div class="login-error" id="loginError"></div>
+  </div>
+</div>
+
+<!-- ===================== 메인 앱 ===================== -->
+<div id="app">
+  <div class="ruler-sidebar">
+    <p class="ruler-title">성장기록</p>
+    <p class="ruler-sub">자녀를 선택하세요</p>
+    <div id="childTabs"></div>
+    <button class="add-child-btn" id="addChildBtn">+ 자녀 추가</button>
+    <div class="sidebar-footer">
+      <button class="logout-link" id="logoutBtn">로그아웃</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="app-header">
+      <h1>자녀 성장기록</h1>
+      <span class="today" id="todayLabel"></span>
+    </div>
+
+    <div id="mainContent"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ================= 평균 신장/체중 데이터 (통계청 자료 기준, 근사 보간용) ================= */
+  var AVG_DATA = [
+    {m:0,   bh:49.9,  bw:3.3,  gh:49.1,  gw:3.2},
+    {m:12,  bh:75.7,  bw:9.6,  gh:74.0,  gw:8.9},
+    {m:24,  bh:87.1,  bw:12.2, gh:85.7,  gw:11.5},
+    {m:36,  bh:96.5,  bw:14.8, gh:95.4,  gw:14.2},
+    {m:48,  bh:103.1, bw:16.5, gh:101.9, gw:15.8},
+    {m:60,  bh:109.6, bw:18.6, gh:108.4, gw:17.9},
+    {m:72,  bh:115.9, bw:21.0, gh:114.7, gw:20.2},
+    {m:84,  bh:122.4, bw:24.1, gh:121.1, gw:23.0},
+    {m:96,  bh:128.3, bw:27.7, gh:126.9, gw:26.3},
+    {m:108, bh:133.7, bw:31.7, gh:132.8, gw:30.1},
+    {m:120, bh:138.8, bw:36.1, gh:138.8, gw:34.4},
+    {m:132, bh:144.3, bw:41.0, gh:145.3, gw:39.4},
+    {m:144, bh:151.8, bw:46.8, gh:151.8, gw:44.4},
+    {m:156, bh:160.4, bw:53.0, gh:156.2, gw:48.6},
+    {m:168, bh:166.8, bw:58.4, gh:158.7, gw:51.5},
+    {m:180, bh:170.6, bw:62.1, gh:159.9, gw:53.1},
+    {m:192, bh:172.5, bw:64.3, gh:160.4, gw:53.8},
+    {m:204, bh:173.4, bw:65.5, gh:160.7, gw:54.1},
+    {m:216, bh:173.8, bw:66.0, gh:160.8, gw:54.2},
+    {m:228, bh:174.5, bw:66.8, gh:161.0, gw:54.4}
+  ];
+  function getAverage(gender, months){
+    var mm = Math.max(0, Math.min(months, AVG_DATA[AVG_DATA.length-1].m));
+    var lo = AVG_DATA[0], hi = AVG_DATA[AVG_DATA.length-1];
+    for(var i=0;i<AVG_DATA.length-1;i++){
+      if(mm>=AVG_DATA[i].m && mm<=AVG_DATA[i+1].m){ lo=AVG_DATA[i]; hi=AVG_DATA[i+1]; break; }
+    }
+    var span = hi.m - lo.m;
+    var t = span>0 ? (mm-lo.m)/span : 0;
+    var hKeyLo = gender==='F' ? 'gh':'bh', wKeyLo = gender==='F' ? 'gw':'bw';
+    var h = lo[hKeyLo] + (hi[hKeyLo]-lo[hKeyLo])*t;
+    var w = lo[wKeyLo] + (hi[wKeyLo]-lo[wKeyLo])*t;
+    return {height:h, weight:w};
+  }
+
+  /* ================= 저장소 ================= */
+  var STORAGE_KEY = 'growthTrackerData_v1';
+  var state = loadState();
+
+  function loadState(){
+    try{
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if(raw){ return JSON.parse(raw); }
+    }catch(e){}
+    return { children: [], activeChildId: null };
+  }
+  function saveState(){
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }
+  function uid(prefix){ return prefix + '_' + Date.now() + '_' + Math.floor(Math.random()*10000); }
+
+  function ensureDefaultChild(){
+    if(state.children.length===0){
+      var c = { id: uid('child'), name:'', gender:'M', birth:'', records:[] };
+      state.children.push(c);
+      state.activeChildId = c.id;
+      saveState();
+    } else if(!state.activeChildId){
+      state.activeChildId = state.children[0].id;
+    }
+  }
+
+  function getActiveChild(){
+    return state.children.find(function(c){ return c.id===state.activeChildId; });
+  }
+
+  /* ================= 나이 계산 ================= */
+  function calendarAge(birthStr, atDate){
+    var b = new Date(birthStr+'T00:00:00');
+    var years = atDate.getFullYear()-b.getFullYear();
+    var months = atDate.getMonth()-b.getMonth();
+    var days = atDate.getDate()-b.getDate();
+    if(days<0) months--;
+    if(months<0){ years--; months+=12; }
+    return {years:years, months:months};
+  }
+  function monthsBetween(dateStr1, dateStr2){
+    var d1 = new Date(dateStr1+'T00:00:00');
+    var d2 = new Date(dateStr2+'T00:00:00');
+    return (d2-d1)/(1000*60*60*24*30.4368);
+  }
+  function decimalAgeMonths(birthStr, atDate){
+    if(!birthStr) return 0;
+    var b = new Date(birthStr+'T00:00:00');
+    return (atDate-b)/(1000*60*60*24*30.4368);
+  }
+
+  /* ================= 로그인 ================= */
+  var SESSION_KEY = 'growthTrackerSession';
+  document.getElementById('loginBtn').addEventListener('click', function(){
+    var u = document.getElementById('loginUser').value.trim();
+    var p = document.getElementById('loginPass').value;
+    var err = document.getElementById('loginError');
+    if(u==='admin' && p==='1234'){
+      sessionStorage.setItem(SESSION_KEY, '1');
+      err.textContent='';
+      startApp();
+    } else {
+      err.textContent = '아이디 또는 비밀번호가 올바르지 않습니다.';
+    }
+  });
+  document.getElementById('loginPass').addEventListener('keydown', function(e){
+    if(e.key==='Enter'){ document.getElementById('loginBtn').click(); }
+  });
+  document.getElementById('logoutBtn').addEventListener('click', function(){
+    sessionStorage.removeItem(SESSION_KEY);
+    document.getElementById('app').classList.remove('visible');
+    document.getElementById('loginScreen').style.display='flex';
+    document.getElementById('loginPass').value='';
+  });
+
+  function startApp(){
+    document.getElementById('loginScreen').style.display='none';
+    document.getElementById('app').classList.add('visible');
+    ensureDefaultChild();
+    var today = new Date();
+    document.getElementById('todayLabel').textContent =
+      today.getFullYear()+'.'+String(today.getMonth()+1).padStart(2,'0')+'.'+String(today.getDate()).padStart(2,'0');
+    render();
+  }
+
+  if(sessionStorage.getItem(SESSION_KEY)==='1'){ startApp(); }
+
+  /* ================= 렌더링 ================= */
+  function render(){
+    renderSidebar();
+    renderMain();
+  }
+
+  function renderSidebar(){
+    var wrap = document.getElementById('childTabs');
+    wrap.innerHTML = '';
+    state.children.forEach(function(c){
+      var btn = document.createElement('button');
+      btn.className = 'child-tab' + (c.gender==='F'?' girl':'') + (c.id===state.activeChildId?' active':'');
+      btn.innerHTML = '<span class="mark"></span><span>'+ (escapeHtml(c.name) || '(이름 미입력)') +'</span>';
+      btn.addEventListener('click', function(){
+        state.activeChildId = c.id;
+        saveState();
+        render();
+      });
+      wrap.appendChild(btn);
+    });
+  }
+
+  document.getElementById('addChildBtn').addEventListener('click', function(){
+    var c = { id: uid('child'), name:'', gender:'M', birth:'', records:[] };
+    state.children.push(c);
+    state.activeChildId = c.id;
+    saveState();
+    render();
+  });
+
+  function escapeHtml(s){
+    return String(s||'').replace(/[&<>"']/g, function(ch){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch];
+    });
+  }
+
+  function renderMain(){
+    var child = getActiveChild();
+    var main = document.getElementById('mainContent');
+    if(!child){
+      main.innerHTML = '<div class="card"><div class="empty-state">왼쪽에서 "+ 자녀 추가"를 눌러 시작하세요.</div></div>';
+      return;
+    }
+
+    var html = '';
+
+    /* --- 기본정보 --- */
+    html += '<div class="card"><h2><span class="tick"></span>기본 정보</h2>';
+    html += '<div class="info-grid">';
+    html += '<div class="field"><label>이름</label><input type="text" id="f_name" value="'+escapeHtml(child.name)+'" placeholder="자녀 이름"></div>';
+    html += '<div class="field"><label>성별</label><select id="f_gender"><option value="M"'+(child.gender==='M'?' selected':'')+'>남아</option><option value="F"'+(child.gender==='F'?' selected':'')+'>여아</option></select></div>';
+    html += '<div class="field"><label>생년월일</label><input type="date" id="f_birth" value="'+escapeHtml(child.birth)+'"></div>';
+    html += '</div>';
+
+    if(child.birth){
+      var age = calendarAge(child.birth, new Date());
+      html += '<div class="age-readout">만 '+age.years+'세 '+age.months+'개월</div>';
+    }
+    if(state.children.length>1){
+      html += '<button class="delete-child-btn" id="deleteChildBtn">이 자녀 삭제</button>';
+    }
+    html += '</div>';
+
+    /* --- 기록 입력 --- */
+    html += '<div class="card"><h2><span class="tick"></span>키·몸무게 기록 추가</h2>';
+    html += '<div class="record-form">';
+    html += '<div class="field"><label>측정일</label><input type="date" id="r_date" value="'+todayStr()+'"></div>';
+    html += '<div class="field"><label>키 (cm)</label><input type="number" step="0.1" id="r_height" placeholder="예: 132.5"></div>';
+    html += '<div class="field"><label>몸무게 (kg)</label><input type="number" step="0.1" id="r_weight" placeholder="예: 28.4"></div>';
+    html += '<button class="add-record-btn" id="addRecordBtn">기록추가</button>';
+    html += '</div>';
+
+    var sortedRecords = child.records.slice().sort(function(a,b){ return a.date.localeCompare(b.date); });
+
+    // 또래 비교에 사용할 "선택된 기록" — 리스트나 그래프에서 특정 날짜를 클릭하면 바뀝니다.
+    // 저장된 선택이 없거나 삭제된 기록이면 가장 최근 기록으로 돌아갑니다.
+    var selectedRecord = null;
+    if(child.selectedRecordId){
+      selectedRecord = sortedRecords.find(function(r){ return r.id===child.selectedRecordId; }) || null;
+    }
+    if(!selectedRecord && sortedRecords.length>0){
+      selectedRecord = sortedRecords[sortedRecords.length-1];
+    }
+
+    if(sortedRecords.length>=2){
+      var last = sortedRecords[sortedRecords.length-1];
+      var prev = sortedRecords[sortedRecords.length-2];
+      var mDiff = monthsBetween(prev.date, last.date);
+      var hRate = mDiff>0 ? (last.height-prev.height)/mDiff : 0;
+      var wRate = mDiff>0 ? (last.weight-prev.weight)/mDiff : 0;
+      var hPct = prev.height!==0 ? (last.height-prev.height)/prev.height*100 : 0;
+      var wPct = prev.weight!==0 ? (last.weight-prev.weight)/prev.weight*100 : 0;
+      html += '<div class="growth-summary">';
+      html += summaryItem('최근 측정 간격', mDiff.toFixed(1)+'개월');
+      html += summaryItem('월평균 키 증가', signed(hRate,1)+' cm/월');
+      html += summaryItem('월평균 몸무게 증가', signed(wRate,1)+' kg/월');
+      html += summaryItem('키 증감률', signed(hPct,1)+'%');
+      html += summaryItem('몸무게 증감률', signed(wPct,1)+'%');
+      html += '</div>';
+    } else if(sortedRecords.length===1){
+      html += '<div class="growth-summary"><div class="summary-item"><div class="label">안내</div><div class="value" style="font-size:13px;font-weight:500;">기록이 2개 이상이면 증가율이 표시됩니다.</div></div></div>';
+    }
+    html += '</div>';
+
+    /* --- 그래프 --- */
+    if(sortedRecords.length>=1){
+      html += '<div class="card"><h2><span class="tick"></span>성장 그래프</h2>';
+      html += '<div class="chart-row">';
+      html += '<div class="chart-box"><div class="chart-title">키 (cm)</div><canvas class="growth-canvas" id="chartHeight"></canvas></div>';
+      html += '<div class="chart-box"><div class="chart-title">몸무게 (kg)</div><canvas class="growth-canvas" id="chartWeight"></canvas></div>';
+      html += '</div></div>';
+    }
+
+    /* --- 또래 비교 --- */
+    if(selectedRecord && child.birth){
+      var ageMonthsAtSelected = decimalAgeMonths(child.birth, new Date(selectedRecord.date+'T00:00:00'));
+      var avg = getAverage(child.gender, ageMonthsAtSelected);
+      var hDiffPct = avg.height ? (selectedRecord.height-avg.height)/avg.height*100 : 0;
+      var wDiffPct = avg.weight ? (selectedRecord.weight-avg.weight)/avg.weight*100 : 0;
+      var isLatestSelected = selectedRecord.id === sortedRecords[sortedRecords.length-1].id;
+
+      html += '<div class="card"><h2><span class="tick"></span>또래 평균 대비 상태</h2>';
+      html += '<div class="compare-date-row"><span class="compare-date">측정일: '+selectedRecord.date+(isLatestSelected?' (최근 기록)':'')+'</span>';
+      if(!isLatestSelected){
+        html += '<button class="jump-latest-btn" id="jumpLatestBtn">최근 기록으로 보기</button>';
+      }
+      html += '</div>';
+      html += '<div class="compare-hint">기록 목록이나 그래프의 점을 클릭하면 해당 날짜 기준으로 바뀝니다.</div>';
+      html += '<div class="compare-grid">';
+      html += compareBox('키', selectedRecord.height, avg.height, hDiffPct);
+      html += compareBox('몸무게', selectedRecord.weight, avg.weight, wDiffPct);
+      html += '</div>';
+      html += '</div>';
+    }
+
+    /* --- 기록 테이블 --- */
+    html += '<div class="card"><h2><span class="tick"></span>전체 기록</h2>';
+    if(sortedRecords.length===0){
+      html += '<div class="empty-state">아직 등록된 기록이 없습니다.</div>';
+    } else {
+      html += '<table class="record-table"><thead><tr><th>측정일</th><th>키(cm)</th><th>몸무게(kg)</th><th>키 증감</th><th>몸무게 증감</th><th></th></tr></thead><tbody>';
+      for(var i=0;i<sortedRecords.length;i++){
+        var r = sortedRecords[i];
+        var hDelta = i>0 ? signed(r.height-sortedRecords[i-1].height,1)+' cm' : '-';
+        var wDelta = i>0 ? signed(r.weight-sortedRecords[i-1].weight,1)+' kg' : '-';
+        var isSel = selectedRecord && r.id===selectedRecord.id;
+        html += '<tr class="record-row'+(isSel?' selected':'')+'" data-rid="'+r.id+'">';
+        html += '<td>'+r.date+'</td><td>'+r.height+'</td><td>'+r.weight+'</td><td>'+hDelta+'</td><td>'+wDelta+'</td>';
+        html += '<td><button class="del-record-btn" data-rid="'+r.id+'">삭제</button></td></tr>';
+      }
+      html += '</tbody></table>';
+    }
+    html += '</div>';
+
+    main.innerHTML = html;
+
+    /* --- 이벤트 바인딩 --- */
+    document.getElementById('f_name').addEventListener('change', function(){
+      child.name = this.value; saveState(); renderSidebar();
+    });
+    document.getElementById('f_gender').addEventListener('change', function(){
+      child.gender = this.value; saveState(); renderMain();
+    });
+    document.getElementById('f_birth').addEventListener('change', function(){
+      child.birth = this.value; saveState(); renderMain();
+    });
+    var delBtn = document.getElementById('deleteChildBtn');
+    if(delBtn){
+      delBtn.addEventListener('click', function(){
+        if(confirm('"'+ (child.name||'이 자녀') +'"의 모든 기록을 삭제할까요? 이 작업은 되돌릴 수 없습니다.')){
+          state.children = state.children.filter(function(c){ return c.id!==child.id; });
+          state.activeChildId = state.children.length ? state.children[0].id : null;
+          saveState();
+          render();
+        }
+      });
+    }
+    document.getElementById('addRecordBtn').addEventListener('click', function(){
+      var d = document.getElementById('r_date').value;
+      var h = parseFloat(document.getElementById('r_height').value);
+      var w = parseFloat(document.getElementById('r_weight').value);
+      if(!d || isNaN(h) || isNaN(w)){
+        alert('측정일, 키, 몸무게를 모두 입력해 주세요.');
+        return;
+      }
+      child.records.push({ id: uid('rec'), date:d, height:h, weight:w });
+      saveState();
+      renderMain();
+    });
+    document.querySelectorAll('.del-record-btn').forEach(function(btn){
+      btn.addEventListener('click', function(e){
+        e.stopPropagation();
+        var rid = this.getAttribute('data-rid');
+        child.records = child.records.filter(function(r){ return r.id!==rid; });
+        if(child.selectedRecordId===rid){ child.selectedRecordId = null; }
+        saveState();
+        renderMain();
+      });
+    });
+    document.querySelectorAll('.record-row').forEach(function(row){
+      row.addEventListener('click', function(){
+        child.selectedRecordId = this.getAttribute('data-rid');
+        saveState();
+        renderMain();
+      });
+    });
+    var jumpBtn = document.getElementById('jumpLatestBtn');
+    if(jumpBtn){
+      jumpBtn.addEventListener('click', function(){
+        child.selectedRecordId = sortedRecords[sortedRecords.length-1].id;
+        saveState();
+        renderMain();
+      });
+    }
+
+    function onChartPointSelect(id){
+      child.selectedRecordId = id;
+      saveState();
+      renderMain();
+    }
+    if(sortedRecords.length>=1){
+      var selId = selectedRecord ? selectedRecord.id : null;
+      drawLineChart(document.getElementById('chartHeight'), sortedRecords, 'height', 'var(--sky)', selId, onChartPointSelect);
+      drawLineChart(document.getElementById('chartWeight'), sortedRecords, 'weight', 'var(--coral)', selId, onChartPointSelect);
+    }
+  }
+
+  function summaryItem(label, value){
+    return '<div class="summary-item"><div class="label">'+label+'</div><div class="value">'+value+'</div></div>';
+  }
+  function compareBox(label, value, avg, diffPct){
+    var cls = diffPct>=0 ? 'delta-up' : 'delta-down';
+    return '<div class="compare-box">'+
+      '<div class="metric">'+label+' 현재 측정값</div>'+
+      '<div class="bignum">'+value+'</div>'+
+      '<div class="sub">또래 평균 '+avg.toFixed(1)+' 대비 <span class="'+cls+'">'+signed(diffPct,1)+'%</span></div>'+
+      '</div>';
+  }
+  function signed(n, digits){
+    var v = n.toFixed(digits);
+    return (n>0?'+':'') + v;
+  }
+  function todayStr(){
+    var d = new Date();
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  }
+
+  /* ================= 캔버스 라인 차트 (외부 라이브러리 없이 직접 렌더링) ================= */
+  function resolveCssVar(v){
+    if(v.indexOf('var(')!==0) return v;
+    var name = v.slice(4,-1).trim();
+    return getComputedStyle(document.body).getPropertyValue(name).trim();
+  }
+
+  function drawLineChart(canvas, records, key, colorVar, selectedId, onSelect){
+    var color = resolveCssVar(colorVar);
+    var dpr = window.devicePixelRatio || 1;
+    var cssW = canvas.clientWidth || 400;
+    var cssH = 220;
+    canvas.width = cssW*dpr;
+    canvas.height = cssH*dpr;
+    var ctx = canvas.getContext('2d');
+    ctx.scale(dpr,dpr);
+    ctx.clearRect(0,0,cssW,cssH);
+
+    var padL=42, padR=14, padT=14, padB=28;
+    var plotW = cssW-padL-padR, plotH = cssH-padT-padB;
+
+    var xs = records.map(function(r,i){ return i; });
+    var ys = records.map(function(r){ return r[key]; });
+    var minY = Math.min.apply(null, ys), maxY = Math.max.apply(null, ys);
+    if(minY===maxY){ minY-=1; maxY+=1; }
+    var pad = (maxY-minY)*0.15;
+    minY -= pad; maxY += pad;
+
+    function xPix(i){ return padL + (records.length<=1 ? plotW/2 : plotW*i/(records.length-1)); }
+    function yPix(v){ return padT + plotH*(1-(v-minY)/(maxY-minY)); }
+
+    // 눈금(자 모양) - y축
+    ctx.strokeStyle = '#E3E8DF';
+    ctx.fillStyle = '#8A968A';
+    ctx.font = '10px sans-serif';
+    ctx.lineWidth = 1;
+    var ticks = 4;
+    for(var t=0;t<=ticks;t++){
+      var val = minY + (maxY-minY)*t/ticks;
+      var y = yPix(val);
+      ctx.beginPath();
+      ctx.moveTo(padL, y);
+      ctx.lineTo(padL+plotW, y);
+      ctx.stroke();
+      ctx.fillText(val.toFixed(1), 4, y+3);
+    }
+
+    // x축 날짜 라벨 (처음/마지막, 중간 하나)
+    ctx.fillStyle = '#8A968A';
+    var labelIdx = records.length<=2 ? records.map(function(r,i){return i;}) : [0, Math.floor((records.length-1)/2), records.length-1];
+    labelIdx.forEach(function(i){
+      var r = records[i];
+      var label = r.date.slice(2).replace(/-/g,'.');
+      var x = xPix(i);
+      ctx.fillText(label, Math.max(padL, Math.min(x-16, cssW-padR-32)), cssH-8);
+    });
+
+    // 선
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    records.forEach(function(r,i){
+      var x=xPix(i), y=yPix(r[key]);
+      if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    });
+    ctx.stroke();
+
+    // 점
+    var pointHits = [];
+    records.forEach(function(r,i){
+      var x=xPix(i), y=yPix(r[key]);
+      pointHits.push({x:x, y:y, id:r.id});
+      var isSel = r.id === selectedId;
+      var isLast = i===records.length-1;
+      ctx.beginPath();
+      ctx.arc(x,y, isSel?6:(isLast?4:3), 0, Math.PI*2);
+      ctx.fillStyle = isSel ? color : (isLast ? color : '#fff');
+      ctx.fill();
+      ctx.lineWidth = isSel ? 3 : 2;
+      ctx.strokeStyle = isSel ? '#22301F' : color;
+      ctx.stroke();
+    });
+
+    canvas.style.cursor = onSelect ? 'pointer' : 'default';
+    canvas.onclick = onSelect ? function(e){
+      var rect = canvas.getBoundingClientRect();
+      var mx = e.clientX - rect.left;
+      var my = e.clientY - rect.top;
+      var nearest = null, nearestDist = Infinity;
+      pointHits.forEach(function(p){
+        var d = Math.hypot(p.x-mx, p.y-my);
+        if(d<nearestDist){ nearestDist = d; nearest = p; }
+      });
+      if(nearest && nearestDist < 20){
+        onSelect(nearest.id);
+      }
+    } : null;
+  }
+
+  window.addEventListener('resize', function(){
+    if(document.getElementById('app').classList.contains('visible')){
+      var child = getActiveChild();
+      if(child && child.records.length>=1){ renderMain(); }
+    }
+  });
+
+})();
+</script>
+</body>
+</html>
