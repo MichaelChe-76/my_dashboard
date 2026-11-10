@@ -1,0 +1,1518 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>2026년 6월 기준 - 전국 기초자치단체 인구현황 대시보드</title>
+  
+  <!-- Noto Sans KR 폰트 로드 -->
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+  
+  <style>
+    /* CSS 브라우저 초기화 및 간섭 원천 배제 */
+    *, ::before, ::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: #f1f5f9;
+      color: #1e293b;
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
+      -webkit-font-smoothing: antialiased;
+      line-height: 1.5;
+    }
+
+    /* 헤더 & 스탯 요약 영역 */
+    .main-header {
+      background: linear-gradient(135deg, #020617 0%, #0f172a 60%, #1e1b4b 100%);
+      color: #ffffff;
+      padding: 48px 16px;
+      text-align: center;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+    }
+
+    .header-badge {
+      display: inline-block;
+      background-color: rgba(99, 102, 241, 0.25);
+      color: #a5b4fc;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 6px 16px;
+      border-radius: 9999px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .header-title {
+      font-size: 32px;
+      font-weight: 900;
+      margin-top: 12px;
+      letter-spacing: -0.03em;
+    }
+    @media (max-width: 640px) {
+      .header-title { font-size: 24px; }
+    }
+
+    .header-desc {
+      color: #94a3b8;
+      font-size: 15px;
+      margin-top: 8px;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      max-width: 1000px;
+      margin: 32px auto 0 auto;
+      text-align: left;
+    }
+    @media (max-width: 1024px) {
+      .summary-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    .summary-card {
+      background-color: rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 16px;
+      border-radius: 12px;
+    }
+
+    .summary-card p {
+      font-size: 12px;
+      color: #cbd5e1;
+      font-weight: 500;
+    }
+
+    .summary-card h4 {
+      font-size: 20px;
+      font-weight: 800;
+      margin-top: 4px;
+    }
+
+    /* 컨트롤러 패널 (검색창 및 필터) */
+    .dashboard-container {
+      max-width: 1280px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 24px 16px;
+    }
+
+    .control-panel {
+      background-color: #ffffff;
+      padding: 20px;
+      border-radius: 16px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+      border: 1px solid #e2e8f0;
+      margin-bottom: 24px;
+    }
+
+    .control-flex {
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .search-box {
+      position: relative;
+      flex-grow: 1;
+      max-width: 500px;
+      min-width: 260px;
+    }
+
+    .search-icon-wrapper {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      align-items: center;
+      pointer-events: none;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 12px 16px 12px 40px;
+      background-color: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 500;
+      color: #1e293b;
+      outline: none;
+      transition: all 0.2s;
+    }
+    .search-input:focus {
+      border-color: #4f46e5;
+      background-color: #ffffff;
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+    }
+
+    .filter-group {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .filter-select {
+      background-color: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #334155;
+      outline: none;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .filter-select:focus {
+      border-color: #4f46e5;
+    }
+
+    .legend-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      border-top: 1px solid #f1f5f9;
+      margin-top: 16px;
+      padding-top: 16px;
+      font-size: 12px;
+      color: #64748b;
+    }
+
+    .legend-bar {
+      width: 180px;
+      height: 12px;
+      border-radius: 9999px;
+      background: linear-gradient(to right, #0f172a, #701a75, #991b1b);
+      box-shadow: inset 0 1px 2px rgba(0,0,0,0.2);
+    }
+
+    .result-badge {
+      background-color: #eef2ff;
+      color: #4f46e5;
+      font-weight: 700;
+      padding: 4px 12px;
+      border-radius: 6px;
+    }
+
+    /* 6열 카드형 그리드 시스템 (반응형 완벽 제어) */
+    .tile-grid {
+      display: grid !important;
+      grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+      gap: 12px !important;
+    }
+    @media (max-width: 1200px) {
+      .tile-grid { grid-template-columns: repeat(5, minmax(0, 1fr)) !important; }
+    }
+    @media (max-width: 992px) {
+      .tile-grid { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
+    }
+    @media (max-width: 768px) {
+      .tile-grid { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+    }
+    @media (max-width: 480px) {
+      .tile-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 8px !important; }
+    }
+
+    /* 개별 카드 스타일 */
+    .tile-card {
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 168px;
+      transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s;
+      user-select: none;
+      position: relative;
+    }
+    .tile-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 20px -5px rgba(0, 0, 0, 0.15);
+    }
+    .tile-card:active {
+      transform: translateY(-1px);
+    }
+
+    .tile-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+    }
+
+    .rank-badge {
+      font-size: 10px;
+      font-weight: 800;
+      padding: 2px 8px;
+      border-radius: 9999px;
+    }
+
+    .tile-meta {
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    .tile-name {
+      font-size: 16px;
+      font-weight: 900;
+      margin-top: 10px;
+      letter-spacing: -0.02em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* 둥근 사각형 형태의 분리형 독립 배지 */
+    .district-badge {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 2px 8px;
+      border-radius: 6px;
+      margin-top: 6px;
+      width: fit-content;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+
+    .tile-bottom {
+      margin-top: 18px;
+    }
+
+    .bottom-label {
+      font-size: 10px;
+    }
+
+    .bottom-flex {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-top: 2px;
+    }
+
+    .tile-pop {
+      font-size: 15px;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+    }
+
+    .tile-rate {
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+
+    /* 전월·전년 동월 증감률 표시 */
+    .summary-delta { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; margin-top: 6px; font-size: 11px; color: #cbd5e1; white-space: nowrap; }
+    .summary-card h4 + .summary-delta { margin-top: 8px; }
+    .tile-deltas { margin-top: 6px; display: flex; flex-direction: column; gap: 2px; }
+    .delta-row { display: flex; justify-content: space-between; align-items: baseline; font-size: 10px; }
+    .delta-row > span:first-child { opacity: 0.75; font-weight: 500; }
+    .delta-row > span:last-child { font-weight: 700; }
+    .compare-card p { font-size: 15px !important; }
+
+    /* 독립 레이어 팝업(모달) 스타일 */
+    .modal-overlay {
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      right: 0 !important;
+      bottom: 0 !important;
+      z-index: 99999 !important;
+      background-color: rgba(15, 23, 42, 0.75) !important;
+      display: none; 
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      opacity: 0;
+      transition: opacity 0.2s ease-in-out;
+    }
+
+    .modal-box {
+      background-color: #ffffff;
+      border-radius: 20px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      width: 100%;
+      max-width: 480px;
+      overflow: hidden;
+      transform: scale(0.95);
+      transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .modal-header {
+      padding: 24px;
+      color: #ffffff;
+      position: relative;
+    }
+
+    .modal-close-btn {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background-color: rgba(0, 0, 0, 0.15);
+      border: none;
+      border-radius: 9999px;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #ffffff;
+      cursor: pointer;
+      transition: background-color 0.15s;
+    }
+    .modal-close-btn:hover {
+      background-color: rgba(0, 0, 0, 0.3);
+    }
+
+    .modal-body {
+      padding: 24px;
+      overflow-y: auto;
+      flex-grow: 1;
+    }
+
+    .pop-compare-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .compare-card {
+      background-color: #f8fafc;
+      border: 1px solid #e2e8f0;
+      padding: 14px;
+      border-radius: 12px;
+    }
+
+    .compare-card span {
+      font-size: 11px;
+      color: #64748b;
+      font-weight: 500;
+    }
+
+    .compare-card p {
+      font-size: 16px;
+      font-weight: 800;
+      color: #1e293b;
+      margin-top: 4px;
+    }
+
+    .trend-card {
+      background-color: #f8fafc;
+      border: 1px solid #e2e8f0;
+      padding: 18px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+    }
+
+    .trend-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .trend-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #334155;
+    }
+
+    .trend-badge {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 9999px;
+    }
+
+    .sub-districts-box {
+      background-color: #f8fafc;
+      border: 1px solid #e2e8f0;
+      padding: 18px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+    }
+
+    .sub-title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #e2e8f0;
+      padding-bottom: 8px;
+      margin-bottom: 12px;
+    }
+
+    .sub-title {
+      font-size: 13px;
+      font-weight: 800;
+      color: #1e1b4b;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .sub-type-badge {
+      font-size: 9px;
+      background-color: #e0e7ff;
+      color: #4f46e5;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    .sub-item {
+      margin-bottom: 10px;
+    }
+    .sub-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .sub-item-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      font-weight: 600;
+      color: #475569;
+      margin-bottom: 4px;
+    }
+
+    .progress-track {
+      width: 100%;
+      height: 8px;
+      background-color: #e2e8f0;
+      border-radius: 9999px;
+      overflow: hidden;
+    }
+
+    .progress-bar-pos {
+      height: 100%;
+      background-color: #10b981;
+      border-radius: 9999px;
+    }
+
+    .progress-bar-neg {
+      height: 100%;
+      background-color: #ef4444;
+      border-radius: 9999px;
+    }
+
+    .progress-bar-indigo {
+      height: 100%;
+      background-color: #4f46e5;
+      border-radius: 9999px;
+      transition: width 0.4s ease-out;
+    }
+
+    .modal-opinion {
+      font-size: 12px;
+      color: #64748b;
+      line-height: 1.6;
+    }
+
+    .modal-footer {
+      background-color: #f8fafc;
+      padding: 14px 24px;
+      border-top: 1px solid #e2e8f0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-footer-text {
+      font-size: 11px;
+      color: #94a3b8;
+    }
+
+    .modal-btn-close {
+      background-color: #1e293b;
+      color: #ffffff;
+      border: none;
+      padding: 8px 16px;
+      font-size: 12px;
+      font-weight: 700;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.15s;
+    }
+    .modal-btn-close:hover {
+      background-color: #334155;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .no-results-box {
+      text-align: center;
+      padding: 64px 16px;
+      background-color: #ffffff;
+      border-radius: 16px;
+      border: 1px solid #e2e8f0;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 헤더 영역 -->
+  <header class="main-header">
+    <div class="max-w-7xl mx-auto">
+      <span class="header-badge">주민등록 인구통계 스마트 분석</span>
+      <h1 class="header-title">전국 기초자치단체 인구 순위 대시보드</h1>
+      <p class="header-desc">2026년 6월말 기준 행정안전부 주민등록 인구통계 매핑 (전월 대비·전년 동월 대비)</p>
+      
+      <!-- 전체 인구 정합성 보정을 위한 공식 안내 메세지 박스 (가독성 높은 연한 파스텔 배경 설계) -->
+      <div style="background-color: rgba(99, 102, 241, 0.12); border: 1px solid rgba(99, 102, 241, 0.3); padding: 12px 20px; border-radius: 12px; max-width: 900px; margin: 16px auto 0 auto; text-align: center;">
+        <p style="font-size: 13px; color: #c7d2fe; font-weight: 500; line-height: 1.6; display: flex; align-items: center; justify-content: center; gap: 8px;">
+          <svg width="16" height="16" fill="none" stroke="#a5b4fc" stroke-width="2.5" viewBox="0 0 24 24" style="flex-shrink: 0;">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          이 대시보드는 기초자치단체 인구 순위를 나타내며, 대한민국 전체 인구통계 차원에서 단층제 광역자치단체인 세종특별자치시와 제주특별자치도(2개 행정시 통합)까지 표시하였습니다.
+        </p>
+      </div>
+      
+      <!-- 핵심 통계 요약 -->
+      <div class="summary-grid">
+        <div class="summary-card">
+          <p>대한민국 총 주민등록 인구</p>
+          <h4 style="color: #34d399;">51,091,769명</h4>
+          <div class="summary-delta"><span>전월(5월) 대비</span><span style="color:#fda4af;font-weight:700">▼ 0.01% <span style="font-weight:500;color:#94a3b8">(-3,561명)</span></span></div>
+          <div class="summary-delta"><span>전년 동월 대비</span><span style="color:#fda4af;font-weight:700">▼ 0.14% <span style="font-weight:500;color:#94a3b8">(-72,813명)</span></span></div>
+        </div>
+        <div class="summary-card">
+          <p>대시보드 분석 지구</p>
+          <h4 style="color: #38bdf8;">228개 행정구역 (226개 기초자치단체 및 2개 단층제 광역자치단체)</h4>
+        </div>
+        <div class="summary-card">
+          <p>전국 인구 1위 지역</p>
+          <h4 style="color: #c7d2fe;">경기 수원시 (119만)</h4>
+        </div>
+        <div class="summary-card">
+          <p>일반 행정구 분석</p>
+          <h4 style="color: #f472b6;">일반구 보유 13개 시</h4>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- 메인 뷰포트 영역 -->
+  <main class="dashboard-container">
+    
+    <!-- 컨트롤 패널 -->
+    <div class="control-panel">
+      <div class="control-flex">
+        <!-- 검색 영역 (SVG 고정 크기 완전 보완) -->
+        <div class="search-box">
+          <span class="search-icon-wrapper">
+            <svg width="20" height="20" fill="none" stroke="#94a3b8" stroke-width="2.5" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
+          </span>
+          <input type="text" id="searchInput" placeholder="지역명 또는 광역시도 검색 (예: 수원, 세종, 제주, 유성)" class="search-input">
+        </div>
+        
+        <!-- 분류 셀렉터 -->
+        <div class="filter-group">
+          <select id="typeFilter" class="filter-select">
+            <option value="all">구분 (전체)</option>
+            <option value="시">시 (특별/행정시 포함)</option>
+            <option value="군">군 지역</option>
+            <option value="구">자치구</option>
+          </select>
+
+          <select id="regionFilter" class="filter-select">
+            <option value="all">광역시도 (전체)</option>
+            <option value="서울">서울특별시</option>
+            <option value="부산">부산광역시</option>
+            <option value="대구">대구광역시</option>
+            <option value="인천">인천광역시</option>
+            <option value="광주">광주광역시</option>
+            <option value="대전">대전광역시</option>
+            <option value="울산">울산광역시</option>
+            <option value="세종">세종특별자치시</option>
+            <option value="경기">경기도</option>
+            <option value="강원">강원특별자치도</option>
+            <option value="충북">충청북도</option>
+            <option value="충남">충청남도</option>
+            <option value="전북">전북특별자치도</option>
+            <option value="전남">전라남도</option>
+            <option value="경북">경상북도</option>
+            <option value="경남">경상남도</option>
+            <option value="제주">제주특별자치도</option>
+          </select>
+
+          <select id="sortOrder" class="filter-select">
+            <option value="pop_desc">인구 많은 순 (전국 순위)</option>
+            <option value="pop_asc">인구 적은 순</option>
+            <option value="growth_desc">전년 동월비 인구 증가율 순</option>
+            <option value="mom_desc">전월비 인구 증가율 순</option>
+            <option value="mom_asc">전월비 인구 감소율 순</option>
+            <option value="growth_asc">전년 동월비 인구 감소율 순</option>
+            <option value="name_asc">이름 가나다순</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- 색상 정보 범례 -->
+      <div class="legend-row">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span class="font-bold" style="font-weight: 700; color: #334155;">🎨 인구 순위 그라데이션 가이드 :</span>
+          <span style="color: #1e3a8a; font-weight: 700;">상위 1위(파랑)</span>
+          <span>➔</span>
+          <span style="color: #6b21a8; font-weight: 700;">중위 115위(보라)</span>
+          <span>➔</span>
+          <span style="color: #991b1b; font-weight: 700;">하위 228위(빨강)</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <div class="legend-bar"></div>
+          <span id="resultCount" class="result-badge">검색결과: 228개 구역</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 타일형 대시보드 그리드 -->
+    <div id="tileGrid" class="tile-grid" style="display: grid;"></div>
+
+    <!-- 검색 결과 없음 안내 -->
+    <div id="noResults" class="hidden no-results-box">
+      <svg width="64" height="64" fill="none" stroke="#94a3b8" stroke-width="1.5" viewBox="0 0 24 24" style="margin: 0 auto 16px auto;">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+      </svg>
+      <h3 style="font-size: 18px; font-weight: 700; color: #475569;">검색 조건에 일치하는 행정구역이 없습니다.</h3>
+      <p style="font-size: 14px; color: #94a3b8; margin-top: 4px;">지역 분류나 검색 키워드를 변경해 보세요.</p>
+    </div>
+  </main>
+
+  <!-- 상세 미니 팝업 대시보드 -->
+  <div id="detailModal" class="modal-overlay">
+    <div class="modal-box" id="modalContent">
+      <!-- 상단 헤더 -->
+      <div id="modalHeader" class="modal-header">
+        <button onclick="closeModal()" class="modal-close-btn" aria-label="닫기">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+        <span id="modalRank" class="bg-white/20 text-xs font-semibold px-2.5 py-0.5 rounded-full" style="background-color: rgba(255,255,255,0.25); border-radius: 9999px;">전국 1위</span>
+        <h2 id="modalTitle" class="header-title" style="font-size: 24px; margin-top: 8px;">경기 수원시</h2>
+        <p id="modalCategory" class="text-sm mt-1" style="color: rgba(255,255,255,0.8); font-size: 13px;">수도권 · 일반 시 지역</p>
+      </div>
+
+      <!-- 인구 비교 정보 (스크롤 영역) -->
+      <div class="modal-body">
+        <!-- 인구수 비교 -->
+        <div class="pop-compare-grid">
+          <div class="compare-card">
+            <span>2026년 6월 (현재)</span>
+            <p id="modalPop2026">1,195,300명</p>
+          </div>
+          <div class="compare-card">
+            <span>2026년 5월 (전월)</span>
+            <p id="modalPopPrev" style="color: #475569;">-</p>
+          </div>
+          <div class="compare-card">
+            <span>2025년 6월 (전년)</span>
+            <p id="modalPop2025" style="color: #64748b;">1,191,063명</p>
+          </div>
+        </div>
+
+        <!-- 인구 증감 현황 -->
+        <div class="trend-card">
+          <div class="trend-top">
+            <span class="trend-title">전년 동월 대비 인구 증감률</span>
+            <span id="modalGrowthBadge" class="trend-badge">+0.35%</span>
+          </div>
+          
+          <div style="margin-top: 8px;">
+            <!-- 변화량 막대그래프 -->
+            <div class="progress-track" style="display: flex;">
+              <div id="modalNegativeBar" class="progress-bar-neg" style="width: 0%"></div>
+              <div id="modalPositiveBar" class="progress-bar-pos" style="width: 50%"></div>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; font-size: 11px; color: #64748b; margin-top: 6px;">
+              <span>감소세</span>
+              <span id="modalDiffText" style="font-weight: 700; color: #10b981;">+4,237명 증가</span>
+              <span>성장세</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 전월 대비 -->
+        <div class="trend-card" style="margin-top: 12px;">
+          <div class="trend-top">
+            <span class="trend-title">전월(5월말) 대비 인구 증감률</span>
+            <span id="modalMomBadge" class="trend-badge">-</span>
+          </div>
+          <div style="margin-top: 8px;">
+            <div class="progress-track" style="display: flex;">
+              <div id="modalMomNeg" class="progress-bar-neg" style="width: 0%"></div>
+              <div id="modalMomPos" class="progress-bar-pos" style="width: 0%"></div>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 11px; color: #64748b; margin-top: 6px;">
+              <span>감소세</span>
+              <span id="modalMomDiff" style="font-weight: 700;">-</span>
+              <span>성장세</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 하위 일반구 분석 (특정시 및 제주도 통합 전용) -->
+        <div id="subDistrictsContainer" class="hidden sub-districts-box">
+          <div class="sub-title-row">
+            <h3 class="sub-title">
+              <svg width="16" height="16" fill="none" stroke="#4f46e5" stroke-width="2.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+              </svg>
+              하위 행정(일반)구별 인구 분포
+            </h3>
+            <span id="subTypeLabel" class="sub-type-badge">비자치구</span>
+          </div>
+          
+          <!-- 일반구 리스트 동적 삽입 위치 -->
+          <div id="subDistrictsList" style="display: flex; flex-direction: column; gap: 12px;">
+            <!-- 동적으로 생성되는 세부 구역 리스트 -->
+          </div>
+        </div>
+
+        <!-- 분석 브리핑 소견 -->
+        <div style="border-top: 1px solid #e2e8f0; padding-top: 16px;">
+          <p id="modalOpinion" class="modal-opinion"></p>
+        </div>
+      </div>
+
+      <!-- 푸터 -->
+      <div class="modal-footer">
+        <span class="modal-footer-text">데이터 출처: 행정안전부 주민등록 인구현황</span>
+        <button onclick="closeModal()" class="modal-btn-close">닫기</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const rawData = [
+      {
+        region: "경기", name: "수원시", type: "시", pop2026: 1185770, pop2025: 1191063, popPrev: 1186120,
+        districts: [
+          { name: "장안구", pop: 269984 },
+          { name: "권선구", pop: 360286 },
+          { name: "팔달구", pop: 193401 },
+          { name: "영통구", pop: 362099 }
+        ]
+      },
+      {
+        region: "경기", name: "용인시", type: "시", pop2026: 1090211, pop2025: 1091797, popPrev: 1089693,
+        districts: [
+          { name: "처인구", pop: 286391 },
+          { name: "기흥구", pop: 434590 },
+          { name: "수지구", pop: 369230 }
+        ]
+      },
+      {
+        region: "경기", name: "고양시", type: "시", pop2026: 1057438, pop2025: 1063175, popPrev: 1057471,
+        districts: [
+          { name: "덕양구", pop: 483048 },
+          { name: "일산동구", pop: 298269 },
+          { name: "일산서구", pop: 276121 }
+        ]
+      },
+      {
+        region: "경기", name: "화성시", type: "시", pop2026: 998746, pop2025: 979683, popPrev: 997713,
+        districts: [
+          { name: "만세구", pop: 234482 },
+          { name: "효행구", pop: 160481 },
+          { name: "병점구", pop: 174794 },
+          { name: "동탄구", pop: 428989 }
+        ]
+      },
+      {
+        region: "경남", name: "창원시", type: "시", pop2026: 986273, pop2025: 994887, popPrev: 986759,
+        districts: [
+          { name: "의창구", pop: 209377 },
+          { name: "성산구", pop: 245292 },
+          { name: "마산합포구", pop: 174487 },
+          { name: "마산회원구", pop: 174175 },
+          { name: "진해구", pop: 182942 }
+        ]
+      },
+      {
+        region: "경기", name: "성남시", type: "시", pop2026: 902344, pop2025: 909210, popPrev: 903747,
+        districts: [
+          { name: "수정구", pop: 234639 },
+          { name: "중원구", pop: 200064 },
+          { name: "분당구", pop: 467641 }
+        ]
+      },
+      {
+        region: "충북", name: "청주시", type: "시", pop2026: 859571, pop2025: 855340, popPrev: 859441,
+        districts: [
+          { name: "상당구", pop: 193079 },
+          { name: "서원구", pop: 187779 },
+          { name: "흥덕구", pop: 292625 },
+          { name: "청원구", pop: 186088 }
+        ]
+      },
+      {
+        region: "경기", name: "부천시", type: "시", pop2026: 755453, pop2025: 763599, popPrev: 756037,
+        districts: [
+          { name: "원미구", pop: 382339 },
+          { name: "소사구", pop: 224202 },
+          { name: "오정구", pop: 148912 }
+        ]
+      },
+      { region: "경기", name: "남양주시", type: "시", pop2026: 727440, pop2025: 730245, popPrev: 727717 },
+      {
+        region: "충남", name: "천안시", type: "시", pop2026: 666182, pop2025: 661967, popPrev: 665858,
+        districts: [
+          { name: "동남구", pop: 263653 },
+          { name: "서북구", pop: 402529 }
+        ]
+      },
+      { region: "인천", name: "서구", type: "구", pop2026: 662875, pop2025: 644376, popPrev: 660464 },
+      {
+        region: "제주", name: "제주특별자치도", type: "특별자치도", pop2026: 662792, pop2025: 666625, popPrev: 662969,
+        districts: [
+          { name: "제주시", pop: 484123 },
+          { name: "서귀포시", pop: 178669 }
+        ]
+      },
+      { region: "서울", name: "송파구", type: "구", pop2026: 650258, pop2025: 646591, popPrev: 650505 },
+      {
+        region: "전북", name: "전주시", type: "시", pop2026: 620874, pop2025: 630274, popPrev: 621760,
+        districts: [
+          { name: "완산구", pop: 313529 },
+          { name: "덕진구", pop: 307345 }
+        ]
+      },
+      { region: "경기", name: "평택시", type: "시", pop2026: 619670, pop2025: 602442, popPrev: 618234 },
+      {
+        region: "경기", name: "안산시", type: "시", pop2026: 609240, pop2025: 615689, popPrev: 609712,
+        districts: [
+          { name: "상록구", pop: 320773 },
+          { name: "단원구", pop: 288467 }
+        ]
+      },
+      {
+        region: "경기", name: "안양시", type: "시", pop2026: 562305, pop2025: 563546, popPrev: 562341,
+        districts: [
+          { name: "만안구", pop: 233711 },
+          { name: "동안구", pop: 328594 }
+        ]
+      },
+      { region: "서울", name: "강남구", type: "구", pop2026: 552830, pop2025: 556565, popPrev: 552962 },
+      { region: "서울", name: "강서구", type: "구", pop2026: 548515, pop2025: 551899, popPrev: 548622 },
+      { region: "경기", name: "파주시", type: "시", pop2026: 533387, pop2025: 519010, popPrev: 532124 },
+      { region: "경남", name: "김해시", type: "시", pop2026: 532777, pop2025: 532477, popPrev: 532665 },
+      { region: "경기", name: "시흥시", type: "시", pop2026: 514831, pop2025: 515106, popPrev: 514804 },
+      { region: "대구", name: "달서구", type: "구", pop2026: 513399, pop2025: 520077, popPrev: 514075 },
+      { region: "서울", name: "강동구", type: "구", pop2026: 499011, pop2025: 498079, popPrev: 499058 },
+      { region: "인천", name: "부평구", type: "구", pop2026: 488191, pop2025: 493326, popPrev: 488829 },
+      {
+        region: "경북", name: "포항시", type: "시", pop2026: 487008, pop2025: 489898, popPrev: 487055,
+        districts: [
+          { name: "남구", pop: 212298 },
+          { name: "북구", pop: 274710 }
+        ]
+      },
+      { region: "경기", name: "김포시", type: "시", pop2026: 484042, pop2025: 485070, popPrev: 484047 },
+      { region: "서울", name: "노원구", type: "구", pop2026: 481053, pop2025: 487216, popPrev: 481589 },
+      { region: "인천", name: "남동구", type: "구", pop2026: 479149, pop2025: 482547, popPrev: 479343 },
+      { region: "서울", name: "관악구", type: "구", pop2026: 477797, pop2025: 479320, popPrev: 478154 },
+      { region: "대전", name: "서구", type: "구", pop2026: 464359, pop2025: 460885, popPrev: 463601 },
+      { region: "경기", name: "의정부시", type: "시", pop2026: 461917, pop2025: 461706, popPrev: 461816 },
+      { region: "서울", name: "은평구", type: "구", pop2026: 453212, pop2025: 458762, popPrev: 453398 },
+      { region: "서울", name: "성북구", type: "구", pop2026: 421762, pop2025: 424030, popPrev: 422190 },
+      { region: "서울", name: "양천구", type: "구", pop2026: 421247, pop2025: 428045, popPrev: 422070 },
+      { region: "인천", name: "미추홀구", type: "구", pop2026: 418211, pop2025: 416965, popPrev: 417725 },
+      { region: "광주", name: "북구", type: "구", pop2026: 416783, pop2025: 420188, popPrev: 416326 },
+      { region: "서울", name: "서초구", type: "구", pop2026: 414383, pop2025: 407507, popPrev: 414486 },
+      { region: "인천", name: "연수구", type: "구", pop2026: 410290, pop2025: 404791, popPrev: 410308 },
+      { region: "대구", name: "수성구", type: "구", pop2026: 408147, pop2025: 409536, popPrev: 408527 },
+      { region: "대구", name: "북구", type: "구", pop2026: 406915, pop2025: 411316, popPrev: 407548 },
+      { region: "경북", name: "구미시", type: "시", pop2026: 402726, pop2025: 403974, popPrev: 402867 },
+      { region: "경기", name: "광주시", type: "시", pop2026: 399111, pop2025: 397310, popPrev: 398250 },
+      { region: "세종", name: "세종특별자치시", type: "특별자치시", pop2026: 390923, pop2025: 392223, popPrev: 391064 },
+      { region: "광주", name: "광산구", type: "구", pop2026: 383206, pop2025: 389570, popPrev: 384040 },
+      { region: "서울", name: "구로구", type: "구", pop2026: 382633, pop2025: 386031, popPrev: 382652 },
+      { region: "서울", name: "중랑구", type: "구", pop2026: 376386, pop2025: 377473, popPrev: 376463 },
+      { region: "서울", name: "동작구", type: "구", pop2026: 371999, pop2025: 374777, popPrev: 372327 },
+      { region: "서울", name: "영등포구", type: "구", pop2026: 371867, pop2025: 372863, popPrev: 371772 },
+      { region: "대전", name: "유성구", type: "구", pop2026: 371104, pop2025: 366771, popPrev: 371147 },
+      { region: "부산", name: "해운대구", type: "구", pop2026: 370739, pop2025: 374089, popPrev: 370920 },
+      { region: "부산", name: "부산진구", type: "구", pop2026: 364912, pop2025: 364707, popPrev: 365104 },
+      { region: "강원", name: "원주시", type: "시", pop2026: 364811, pop2025: 362405, popPrev: 364570 },
+      { region: "충남", name: "아산시", type: "시", pop2026: 363678, pop2025: 357122, popPrev: 363223 },
+      { region: "경남", name: "양산시", type: "시", pop2026: 361389, pop2025: 360300, popPrev: 361433 },
+      { region: "서울", name: "마포구", type: "구", pop2026: 356487, pop2025: 359622, popPrev: 356856 },
+      { region: "서울", name: "동대문구", type: "구", pop2026: 352848, pop2025: 342354, popPrev: 352299 },
+      { region: "대구", name: "동구", type: "구", pop2026: 338476, pop2025: 340568, popPrev: 338260 },
+      { region: "경남", name: "진주시", type: "시", pop2026: 334651, pop2025: 337529, popPrev: 334984 },
+      { region: "서울", name: "광진구", type: "구", pop2026: 330905, pop2025: 333096, popPrev: 331136 },
+      { region: "경기", name: "하남시", type: "시", pop2026: 327495, pop2025: 328214, popPrev: 327571 },
+      { region: "울산", name: "남구", type: "구", pop2026: 304337, pop2025: 304268, popPrev: 304385 },
+      { region: "경기", name: "광명시", type: "시", pop2026: 303666, pop2025: 286090, popPrev: 303479 },
+      { region: "서울", name: "서대문구", type: "구", pop2026: 299810, pop2025: 301034, popPrev: 300236 },
+      { region: "서울", name: "도봉구", type: "구", pop2026: 298225, pop2025: 301554, popPrev: 298571 },
+      { region: "경기", name: "양주시", type: "시", pop2026: 297226, pop2025: 292688, popPrev: 296976 },
+      { region: "강원", name: "춘천시", type: "시", pop2026: 285027, pop2025: 285375, popPrev: 285160 },
+      { region: "부산", name: "사하구", type: "구", pop2026: 282159, pop2025: 289432, popPrev: 282633 },
+      { region: "서울", name: "강북구", type: "구", pop2026: 278041, pop2025: 281288, popPrev: 278294 },
+      { region: "인천", name: "계양구", type: "구", pop2026: 276309, pop2025: 277702, popPrev: 276563 },
+      { region: "광주", name: "서구", type: "구", pop2026: 274624, pop2025: 276468, popPrev: 274925 },
+      { region: "서울", name: "성동구", type: "구", pop2026: 274517, pop2025: 273195, popPrev: 274694 },
+      { region: "전남", name: "순천시", type: "시", pop2026: 274131, pop2025: 275352, popPrev: 274685 },
+      { region: "부산", name: "동래구", type: "구", pop2026: 271097, pop2025: 274473, popPrev: 271437 },
+      { region: "전북", name: "익산시", type: "시", pop2026: 266758, pop2025: 267618, popPrev: 266818 },
+      { region: "경북", name: "경산시", type: "시", pop2026: 263406, pop2025: 265622, popPrev: 263639 },
+      { region: "부산", name: "북구", type: "구", pop2026: 260736, pop2025: 264872, popPrev: 260994 },
+      { region: "전남", name: "여수시", type: "시", pop2026: 260502, pop2025: 265496, popPrev: 260913 },
+      { region: "전북", name: "군산시", type: "시", pop2026: 255591, pop2025: 256614, popPrev: 255649 },
+      { region: "부산", name: "남구", type: "구", pop2026: 254413, pop2025: 252382, popPrev: 254174 },
+      { region: "경기", name: "오산시", type: "시", pop2026: 253590, pop2025: 246976, popPrev: 252414 },
+      { region: "대구", name: "달성군", type: "군", pop2026: 252000, pop2025: 255946, popPrev: 252210 },
+      { region: "경기", name: "군포시", type: "시", pop2026: 249462, pop2025: 253253, popPrev: 249770 },
+      { region: "경북", name: "경주시", type: "시", pop2026: 243051, pop2025: 244411, popPrev: 243141 },
+      { region: "경남", name: "거제시", type: "시", pop2026: 229029, pop2025: 231887, popPrev: 229221 },
+      { region: "경기", name: "이천시", type: "시", pop2026: 224740, pop2025: 223352, popPrev: 223635 },
+      { region: "대전", name: "중구", type: "구", pop2026: 224273, pop2025: 225910, popPrev: 224581 },
+      { region: "서울", name: "금천구", type: "구", pop2026: 222503, pop2025: 224076, popPrev: 222655 },
+      { region: "울산", name: "울주군", type: "군", pop2026: 218285, pop2025: 218509, popPrev: 218259 },
+      { region: "대전", name: "동구", type: "구", pop2026: 218251, pop2025: 219570, popPrev: 218505 },
+      { region: "울산", name: "북구", type: "구", pop2026: 213685, pop2025: 215780, popPrev: 213772 },
+      { region: "부산", name: "연제구", type: "구", pop2026: 211464, pop2025: 211127, popPrev: 211509 },
+      { region: "충북", name: "충주시", type: "시", pop2026: 205978, pop2025: 206872, popPrev: 206179 },
+      { region: "부산", name: "금정구", type: "구", pop2026: 205672, pop2025: 208216, popPrev: 205968 },
+      { region: "강원", name: "강릉시", type: "시", pop2026: 205666, pop2025: 206904, popPrev: 205790 },
+      { region: "광주", name: "남구", type: "구", pop2026: 205647, pop2025: 207988, popPrev: 206083 },
+      { region: "울산", name: "중구", type: "구", pop2026: 203026, pop2025: 205132, popPrev: 203216 },
+      { region: "서울", name: "용산구", type: "구", pop2026: 199648, pop2025: 203127, popPrev: 199810 },
+      { region: "전남", name: "목포시", type: "시", pop2026: 199524, pop2025: 206439, popPrev: 199813 },
+      { region: "경기", name: "안성시", type: "시", pop2026: 198785, pop2025: 195797, popPrev: 198631 },
+      { region: "부산", name: "사상구", type: "구", pop2026: 192475, pop2025: 196467, popPrev: 192718 },
+      { region: "경기", name: "구리시", type: "시", pop2026: 187782, pop2025: 186525, popPrev: 187463 },
+      { region: "인천", name: "중구", type: "구", pop2026: 179030, pop2025: 173185, popPrev: 178490 },
+      { region: "부산", name: "기장군", type: "군", pop2026: 175262, pop2025: 174888, popPrev: 175273 },
+      { region: "충남", name: "당진시", type: "시", pop2026: 172400, pop2025: 172524, popPrev: 172285 },
+      { region: "충남", name: "서산시", type: "시", pop2026: 171136, pop2025: 173253, popPrev: 171306 },
+      { region: "부산", name: "수영구", type: "구", pop2026: 168440, pop2025: 170228, popPrev: 168513 },
+      { region: "경기", name: "의왕시", type: "시", pop2026: 164221, pop2025: 155343, popPrev: 163071 },
+      { region: "대전", name: "대덕구", type: "구", pop2026: 164047, pop2025: 166628, popPrev: 164379 },
+      { region: "대구", name: "서구", type: "구", pop2026: 163508, pop2025: 161058, popPrev: 163748 },
+      { region: "전남", name: "광양시", type: "시", pop2026: 155975, pop2025: 155317, popPrev: 155909 },
+      { region: "부산", name: "강서구", type: "구", pop2026: 153555, pop2025: 145207, popPrev: 153175 },
+      { region: "경북", name: "안동시", type: "시", pop2026: 151864, pop2025: 153754, popPrev: 152246 },
+      { region: "울산", name: "동구", type: "구", pop2026: 147756, pop2025: 149976, popPrev: 147834 },
+      { region: "대구", name: "남구", type: "구", pop2026: 141344, pop2025: 136559, popPrev: 140620 },
+      { region: "경기", name: "포천시", type: "시", pop2026: 140468, pop2025: 141167, popPrev: 140464 },
+      { region: "서울", name: "종로구", type: "구", pop2026: 136318, pop2025: 138015, popPrev: 136518 },
+      { region: "경북", name: "김천시", type: "시", pop2026: 132740, pop2025: 134925, popPrev: 132840 },
+      { region: "충북", name: "제천시", type: "시", pop2026: 128192, pop2025: 128437, popPrev: 128306 },
+      { region: "경기", name: "양평군", type: "군", pop2026: 126822, pop2025: 126873, popPrev: 126746 },
+      { region: "서울", name: "중구", type: "구", pop2026: 117558, pop2025: 119097, popPrev: 117765 },
+      { region: "전남", name: "나주시", type: "시", pop2026: 116691, pop2025: 117215, popPrev: 116791 },
+      { region: "경남", name: "통영시", type: "시", pop2026: 115890, pop2025: 117545, popPrev: 115818 },
+      { region: "경기", name: "여주시", type: "시", pop2026: 113506, pop2025: 114304, popPrev: 113541 },
+      { region: "경남", name: "사천시", type: "시", pop2026: 107882, pop2025: 108036, popPrev: 107808 },
+      { region: "충남", name: "논산시", type: "시", pop2026: 105977, pop2025: 107525, popPrev: 106094 },
+      { region: "광주", name: "동구", type: "구", pop2026: 105200, pop2025: 104868, popPrev: 105005 },
+      { region: "경북", name: "칠곡군", type: "군", pop2026: 103537, pop2025: 105895, popPrev: 103618 },
+      { region: "대구", name: "중구", type: "구", pop2026: 101754, pop2025: 99598, popPrev: 101643 },
+      { region: "충남", name: "홍성군", type: "군", pop2026: 101566, pop2025: 100164, popPrev: 101443 },
+      { region: "부산", name: "서구", type: "구", pop2026: 101216, pop2025: 102581, popPrev: 101320 },
+      { region: "전북", name: "정읍시", type: "시", pop2026: 100738, pop2025: 101240, popPrev: 100683 },
+      { region: "부산", name: "영도구", type: "구", pop2026: 100570, pop2025: 102509, popPrev: 100748 },
+      { region: "전북", name: "완주군", type: "군", pop2026: 100102, pop2025: 100131, popPrev: 100033 },
+      { region: "충남", name: "공주시", type: "시", pop2026: 99757, pop2025: 100714, popPrev: 99841 },
+      { region: "경남", name: "밀양시", type: "시", pop2026: 98591, pop2025: 99956, popPrev: 98619 },
+      { region: "경북", name: "영주시", type: "시", pop2026: 96440, pop2025: 98042, popPrev: 96511 },
+      { region: "충북", name: "음성군", type: "군", pop2026: 95954, pop2025: 92422, popPrev: 95787 },
+      { region: "전남", name: "무안군", type: "군", pop2026: 95659, pop2025: 94103, popPrev: 95807 },
+      { region: "경북", name: "영천시", type: "시", pop2026: 94107, pop2025: 96797, popPrev: 94331 },
+      { region: "충남", name: "보령시", type: "시", pop2026: 91260, pop2025: 92746, popPrev: 91353 },
+      { region: "경북", name: "상주시", type: "시", pop2026: 89228, pop2025: 90996, popPrev: 89382 },
+      { region: "경기", name: "동두천시", type: "시", pop2026: 86265, pop2025: 86950, popPrev: 86243 },
+      { region: "강원", name: "동해시", type: "시", pop2026: 85589, pop2025: 86854, popPrev: 85608 },
+      { region: "충북", name: "진천군", type: "군", pop2026: 85569, pop2025: 85991, popPrev: 85558 },
+      { region: "부산", name: "동구", type: "구", pop2026: 83354, pop2025: 84653, popPrev: 83432 },
+      { region: "전북", name: "김제시", type: "시", pop2026: 81631, pop2025: 81382, popPrev: 81665 },
+      { region: "경기", name: "과천시", type: "시", pop2026: 80832, pop2025: 81981, popPrev: 80384 },
+      { region: "강원", name: "속초시", type: "시", pop2026: 78893, pop2025: 80101, popPrev: 78805 },
+      { region: "충남", name: "예산군", type: "군", pop2026: 78318, pop2025: 78761, popPrev: 78337 },
+      { region: "전북", name: "남원시", type: "시", pop2026: 73812, pop2025: 75011, popPrev: 73937 },
+      { region: "인천", name: "강화군", type: "군", pop2026: 69681, pop2025: 69562, popPrev: 69689 },
+      { region: "강원", name: "홍천군", type: "군", pop2026: 65849, pop2025: 66412, popPrev: 65889 },
+      { region: "경북", name: "문경시", type: "시", pop2026: 64774, pop2025: 66259, popPrev: 64792 },
+      { region: "경기", name: "가평군", type: "군", pop2026: 62041, pop2025: 62177, popPrev: 62044 },
+      { region: "전남", name: "해남군", type: "군", pop2026: 62027, pop2025: 62557, popPrev: 62086 },
+      { region: "강원", name: "삼척시", type: "시", pop2026: 60294, pop2025: 61311, popPrev: 60408 },
+      { region: "전남", name: "화순군", type: "군", pop2026: 59909, pop2025: 60498, popPrev: 60008 },
+      { region: "충남", name: "태안군", type: "군", pop2026: 59039, pop2025: 59770, popPrev: 59083 },
+      { region: "전남", name: "고흥군", type: "군", pop2026: 58976, pop2025: 59898, popPrev: 59047 },
+      { region: "경남", name: "거창군", type: "군", pop2026: 58846, pop2025: 59360, popPrev: 58874 },
+      { region: "인천", name: "동구", type: "구", pop2026: 57926, pop2025: 57260, popPrev: 57836 },
+      { region: "충남", name: "부여군", type: "군", pop2026: 57762, pop2025: 58874, popPrev: 57822 },
+      { region: "경남", name: "함안군", type: "군", pop2026: 56867, pop2025: 58138, popPrev: 56985 },
+      { region: "경남", name: "창녕군", type: "군", pop2026: 54445, pop2025: 55377, popPrev: 54536 },
+      { region: "전남", name: "영광군", type: "군", pop2026: 53902, pop2025: 52882, popPrev: 53933 },
+      { region: "경북", name: "예천군", type: "군", pop2026: 53422, pop2025: 54117, popPrev: 53467 },
+      { region: "충북", name: "옥천군", type: "군", pop2026: 50547, pop2025: 48373, popPrev: 50423 },
+      { region: "전남", name: "영암군", type: "군", pop2026: 50076, pop2025: 50789, popPrev: 50069 },
+      { region: "전북", name: "고창군", type: "군", pop2026: 50071, pop2025: 50631, popPrev: 50148 },
+      { region: "충남", name: "금산군", type: "군", pop2026: 48939, pop2025: 49340, popPrev: 48975 },
+      { region: "경북", name: "의성군", type: "군", pop2026: 47952, pop2025: 48325, popPrev: 47893 },
+      { region: "전북", name: "부안군", type: "군", pop2026: 46946, pop2025: 47580, popPrev: 47009 },
+      { region: "경남", name: "고성군", type: "군", pop2026: 46808, pop2025: 47511, popPrev: 46849 },
+      { region: "충남", name: "서천군", type: "군", pop2026: 46761, pop2025: 47705, popPrev: 46844 },
+      { region: "경북", name: "울진군", type: "군", pop2026: 46195, pop2025: 45999, popPrev: 46096 },
+      { region: "충남", name: "계룡시", type: "시", pop2026: 45959, pop2025: 46093, popPrev: 45972 },
+      { region: "강원", name: "횡성군", type: "군", pop2026: 45575, pop2025: 45870, popPrev: 45596 },
+      { region: "전남", name: "완도군", type: "군", pop2026: 44175, pop2025: 45108, popPrev: 44238 },
+      { region: "전남", name: "담양군", type: "군", pop2026: 44031, pop2025: 44384, popPrev: 44112 },
+      { region: "전남", name: "장성군", type: "군", pop2026: 43095, pop2025: 42842, popPrev: 43009 },
+      { region: "충북", name: "영동군", type: "군", pop2026: 43011, pop2025: 43050, popPrev: 43031 },
+      { region: "경기", name: "연천군", type: "군", pop2026: 42977, pop2025: 41063, popPrev: 42868 },
+      { region: "전남", name: "신안군", type: "군", pop2026: 42319, pop2025: 38996, popPrev: 42207 },
+      { region: "경남", name: "남해군", type: "군", pop2026: 41143, pop2025: 39431, popPrev: 41091 },
+      { region: "경북", name: "성주군", type: "군", pop2026: 40461, pop2025: 41029, popPrev: 40552 },
+      { region: "경북", name: "청도군", type: "군", pop2026: 40021, pop2025: 40286, popPrev: 40058 },
+      { region: "강원", name: "평창군", type: "군", pop2026: 39897, pop2025: 39963, popPrev: 39917 },
+      { region: "강원", name: "철원군", type: "군", pop2026: 39711, pop2025: 39996, popPrev: 39727 },
+      { region: "경남", name: "하동군", type: "군", pop2026: 39596, pop2025: 40322, popPrev: 39703 },
+      { region: "경남", name: "합천군", type: "군", pop2026: 38854, pop2025: 39649, popPrev: 38917 },
+      { region: "전남", name: "보성군", type: "군", pop2026: 37559, pop2025: 36846, popPrev: 36691 },
+      { region: "충북", name: "괴산군", type: "군", pop2026: 37415, pop2025: 35968, popPrev: 37428 },
+      { region: "강원", name: "태백시", type: "시", pop2026: 36811, pop2025: 37556, popPrev: 36853 },
+      { region: "충북", name: "증평군", type: "군", pop2026: 36741, pop2025: 37181, popPrev: 36724 },
+      { region: "부산", name: "중구", type: "구", pop2026: 36306, pop2025: 36999, popPrev: 36375 },
+      { region: "강원", name: "영월군", type: "군", pop2026: 35714, pop2025: 36361, popPrev: 35757 },
+      { region: "경남", name: "함양군", type: "군", pop2026: 35141, pop2025: 35760, popPrev: 35217 },
+      { region: "강원", name: "정선군", type: "군", pop2026: 35128, pop2025: 33346, popPrev: 35113 },
+      { region: "전남", name: "장흥군", type: "군", pop2026: 33952, pop2025: 34290, popPrev: 34006 },
+      { region: "경남", name: "산청군", type: "군", pop2026: 32638, pop2025: 33086, popPrev: 32672 },
+      { region: "경북", name: "영덕군", type: "군", pop2026: 32560, pop2025: 32958, popPrev: 32525 },
+      { region: "전남", name: "강진군", type: "군", pop2026: 31666, pop2025: 31876, popPrev: 31746 },
+      { region: "충북", name: "보은군", type: "군", pop2026: 31181, pop2025: 30350, popPrev: 30716 },
+      { region: "강원", name: "인제군", type: "군", pop2026: 30771, pop2025: 31005, popPrev: 30752 },
+      { region: "충남", name: "청양군", type: "군", pop2026: 30051, pop2025: 29332, popPrev: 30081 },
+      { region: "전남", name: "함평군", type: "군", pop2026: 29601, pop2025: 29733, popPrev: 29490 },
+      { region: "경북", name: "고령군", type: "군", pop2026: 29545, pop2025: 29874, popPrev: 29581 },
+      { region: "경북", name: "봉화군", type: "군", pop2026: 28122, pop2025: 28508, popPrev: 28107 },
+      { region: "전남", name: "진도군", type: "군", pop2026: 27882, pop2025: 28323, popPrev: 27884 },
+      { region: "전남", name: "곡성군", type: "군", pop2026: 27657, pop2025: 26613, popPrev: 27643 },
+      { region: "전북", name: "순창군", type: "군", pop2026: 27584, pop2025: 26792, popPrev: 27611 },
+      { region: "강원", name: "양양군", type: "군", pop2026: 27326, pop2025: 27322, popPrev: 27417 },
+      { region: "강원", name: "고성군", type: "군", pop2026: 27204, pop2025: 26812, popPrev: 27189 },
+      { region: "충북", name: "단양군", type: "군", pop2026: 26628, pop2025: 27061, popPrev: 26623 },
+      { region: "전북", name: "임실군", type: "군", pop2026: 25342, pop2025: 25401, popPrev: 25347 },
+      { region: "전북", name: "진안군", type: "군", pop2026: 24689, pop2025: 24191, popPrev: 24414 },
+      { region: "경남", name: "의령군", type: "군", pop2026: 24531, pop2025: 24854, popPrev: 24481 },
+      { region: "전남", name: "구례군", type: "군", pop2026: 24337, pop2025: 23927, popPrev: 23995 },
+      { region: "경북", name: "청송군", type: "군", pop2026: 24020, pop2025: 23552, popPrev: 23280 },
+      { region: "전북", name: "무주군", type: "군", pop2026: 23326, pop2025: 22917, popPrev: 23202 },
+      { region: "대구", name: "군위군", type: "군", pop2026: 22622, pop2025: 22394, popPrev: 22674 },
+      { region: "강원", name: "화천군", type: "군", pop2026: 22579, pop2025: 22550, popPrev: 22328 },
+      { region: "전북", name: "장수군", type: "군", pop2026: 21169, pop2025: 20476, popPrev: 21144 },
+      { region: "강원", name: "양구군", type: "군", pop2026: 20372, pop2025: 20472, popPrev: 20358 },
+      { region: "인천", name: "옹진군", type: "군", pop2026: 19340, pop2025: 19736, popPrev: 19376 },
+      { region: "경북", name: "영양군", type: "군", pop2026: 15972, pop2025: 15231, popPrev: 15969 },
+      { region: "경북", name: "울릉군", type: "군", pop2026: 8768, pop2025: 9022, popPrev: 8756 }
+    ];
+
+    let completeData = [...rawData];
+
+    // 인구수 기준으로 정확한 정렬 및 순위(Rank) 고정 부여
+    completeData.sort((a, b) => b.pop2026 - a.pop2026);
+    completeData.forEach((item, index) => {
+      item.rank = index + 1;
+    });
+
+    let activeData = [...completeData];
+
+    // 그라데이션 컬러 연산 함수
+    function getGradientColor(rank, total) {
+      const ratio = (rank - 1) / (total - 1);
+      let r, g, b;
+      
+      if (ratio < 0.5) {
+        const t = ratio * 2;
+        r = Math.round(15 + (109 - 15) * t);
+        g = Math.round(23 + (40 - 23) * t);
+        b = Math.round(42 + (217 - 42) * t);
+      } else {
+        const t = (ratio - 0.5) * 2;
+        r = Math.round(109 + (153 - 109) * t);
+        g = Math.round(40 + (27 - 40) * t);
+        b = Math.round(217 + (27 - 217) * t);
+      }
+      return `rgb(${r}, ${g}, ${b})`;
+    }
+
+    // 대비 보정 글자색 연산 알고리즘
+    function getContrastTextColor(rgbString) {
+      const matches = rgbString.match(/\d+/g);
+      if (!matches) return '#ffffff';
+      const r = parseInt(matches[0]);
+      const g = parseInt(matches[1]);
+      const b = parseInt(matches[2]);
+      
+      const luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+      return luminance > 0.45 ? '#0f172a' : '#ffffff'; 
+    }
+
+    // 전년 대비 증감률 (구역 개편으로 전년 수치가 없으면 null)
+    function getGrowth(item) {
+      if (item.pop2025 === null || item.pop2025 === undefined) return null;
+      return ((item.pop2026 - item.pop2025) / item.pop2025) * 100;
+    }
+
+    // 전월 대비 증감률 (전월 수치가 없으면 null)
+    function getMoM(item) {
+      if (item.popPrev === null || item.popPrev === undefined) return null;
+      return ((item.pop2026 - item.popPrev) / item.popPrev) * 100;
+    }
+
+    // 타일용 증감률 표시
+    function rateSpan(rate, bright) {
+      if (rate === null) return `<span style="opacity:0.85;">신설</span>`;
+      const up = rate >= 0;
+      const col = bright ? (up ? '#047857' : '#be123c') : (up ? '#6ee7b7' : '#fda4af');
+      return `<span style="color:${col};">${up ? '▲' : '▼'} ${Math.abs(rate).toFixed(2)}%</span>`;
+    }
+
+    // 천단위 쉼표 포맷터
+    function formatNumber(num) {
+      return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    }
+
+    // 카드 타일 렌더링 함수
+    function renderDashboard() {
+      const grid = document.getElementById("tileGrid");
+      const noResults = document.getElementById("noResults");
+      const countBadge = document.getElementById("resultCount");
+      
+      grid.innerHTML = "";
+      
+      if (activeData.length === 0) {
+        grid.style.display = "none";
+        noResults.classList.remove("hidden");
+        countBadge.innerText = "검색결과: 0개 구역";
+        return;
+      }
+
+      grid.style.display = "grid";
+      noResults.classList.add("hidden");
+      countBadge.innerText = `검색결과: ${activeData.length}개 구역`;
+
+      activeData.forEach((item) => {
+        const bgCol = getGradientColor(item.rank, 228);
+        const textCol = getContrastTextColor(bgCol);
+        
+        const growthRate = getGrowth(item);
+        const isNew = growthRate === null;
+        const growthIcon = isNew ? "" : (growthRate >= 0 ? "▲" : "▼");
+        
+        const isBrightBg = textCol === '#0f172a';
+        
+        const isUp = isNew || growthRate >= 0;
+        let growthStyle = `color: ${isNew ? 'rgba(255,255,255,0.8)' : (isUp ? '#6ee7b7' : '#fda4af')}; font-weight: 600;`;
+        if (isBrightBg) {
+          growthStyle = `color: ${isNew ? '#475569' : (isUp ? '#047857' : '#be123c')}; font-weight: 700;`;
+        }
+
+        const rankBadgeClass = isBrightBg ? "bg-black/10" : "bg-white/15";
+
+        // '일반구 포함', '특별자치시', '특별자치도' 분리형 독립 배지 디자인
+        const badgeBg = isBrightBg ? 'rgba(15, 23, 42, 0.08)' : 'rgba(255, 255, 255, 0.2)';
+        const badgeText = isBrightBg ? '#1e293b' : '#ffffff';
+        
+        let districtBadge = '';
+        if (item.name === "제주특별자치도") {
+          districtBadge = `<div class="district-badge" style="background-color: ${badgeBg}; color: ${badgeText};">특별자치도 (통합)</div>`;
+        } else if (item.districts) {
+          districtBadge = `<div class="district-badge" style="background-color: ${badgeBg}; color: ${badgeText};">일반구 포함</div>`;
+        } else if (item.type === "특별자치시") {
+          districtBadge = `<div class="district-badge" style="background-color: ${badgeBg}; color: ${badgeText};">특별자치시</div>`;
+        }
+
+        const tile = document.createElement("div");
+        tile.className = "tile-card group";
+        tile.style.backgroundColor = bgCol;
+        tile.style.color = textCol;
+        tile.onclick = () => openModal(item);
+
+        tile.innerHTML = `
+          <div>
+            <div class="tile-top">
+              <span class="rank-badge ${rankBadgeClass}">
+                #${item.rank}
+              </span>
+              <span class="tile-meta" style="${isBrightBg ? 'color: #475569;' : 'color: rgba(255,255,255,0.7);'}">${item.region} · ${item.type}</span>
+            </div>
+            
+            <h3 class="tile-name">
+              ${item.name}
+            </h3>
+            ${districtBadge}
+          </div>
+
+          <div class="tile-bottom">
+            <p class="bottom-label" style="${isBrightBg ? 'color: #64748b;' : 'color: rgba(255,255,255,0.75);'}">주민등록 인구</p>
+            <div class="bottom-flex">
+              <span class="tile-pop">${formatNumber(item.pop2026)}명</span>
+              </div>
+            <div class="tile-deltas">
+              <div class="delta-row"><span>전월 대비</span>${rateSpan(getMoM(item), isBrightBg)}</div>
+              <div class="delta-row"><span>전년 동월 대비</span>${rateSpan(getGrowth(item), isBrightBg)}</div>
+            </div>
+          </div>
+        `;
+        grid.appendChild(tile);
+      });
+    }
+
+    // 모달 상세 인포 팝업 제어
+    function openModal(item) {
+      const modal = document.getElementById("detailModal");
+      const content = document.getElementById("modalContent");
+      const header = document.getElementById("modalHeader");
+      
+      const rankColor = getGradientColor(item.rank, 228);
+      header.style.backgroundColor = rankColor;
+      header.style.color = getContrastTextColor(rankColor);
+
+      document.getElementById("modalRank").innerText = `전국 인구 순위: ${item.rank}위`;
+      document.getElementById("modalTitle").innerText = `${item.region} ${item.name}`;
+      
+      let regionType = "지방 자치 군/구";
+      if (item.type === "시") {
+        regionType = item.districts ? "행정구 보유 특정대도시" : "자치시 (행정구 없음)";
+      } else if (item.type === "구") {
+        regionType = "자치구 (선출직 구청장)";
+      } else if (item.type === "군") {
+        regionType = "자치군 지역";
+      } else if (item.type === "특별자치시") {
+        regionType = "특별자치시 (단층제 광역자치구역)";
+      } else if (item.type === "특별자치도") {
+        regionType = "특별자치도 (단층제 광역자치구역)";
+      }
+      
+      document.getElementById("modalCategory").innerText = `${item.region} · ${regionType}`;
+      document.getElementById("modalPop2026").innerText = `${formatNumber(item.pop2026)}명`;
+      const isNew = item.pop2025 === null || item.pop2025 === undefined;
+      const growthVal = isNew ? 0 : item.pop2026 - item.pop2025;
+      document.getElementById("modalPop2025").innerText = isNew ? "집계 없음 (신설)" : `${formatNumber(item.pop2025)}명`;
+      document.getElementById("modalPopPrev").innerText = (item.popPrev === null || item.popPrev === undefined) ? "집계 없음 (신설)" : `${formatNumber(item.popPrev)}명`;
+
+      function applyTrend(ids, base, word) {
+        const badge = document.getElementById(ids.badge);
+        const diffEl = document.getElementById(ids.diff);
+        const pos = document.getElementById(ids.pos);
+        const neg = document.getElementById(ids.neg);
+        badge.className = "trend-badge";
+        diffEl.className = "font-bold";
+        if (base === null || base === undefined) {
+          badge.innerText = "신설 자치구";
+          badge.style.backgroundColor = "#e0e7ff";
+          badge.style.color = "#3730a3";
+          diffEl.innerText = "구역 개편으로 비교 불가";
+          diffEl.style.color = "#64748b";
+          pos.style.width = "0%";
+          neg.style.width = "0%";
+          return;
+        }
+        const val = item.pop2026 - base;
+        const rate = (val / base) * 100;
+        if (val >= 0) {
+          badge.innerText = `+${rate.toFixed(2)}% (상승)`;
+          badge.style.backgroundColor = "#e6f4ea";
+          badge.style.color = "#137333";
+          diffEl.innerText = `${word} ${formatNumber(Math.abs(val))}명 증가`;
+          diffEl.style.color = "#10b981";
+          pos.style.width = "100%";
+          neg.style.width = "0%";
+        } else {
+          badge.innerText = `-${Math.abs(rate).toFixed(2)}% (감소)`;
+          badge.style.backgroundColor = "#fce8e6";
+          badge.style.color = "#c5221f";
+          diffEl.innerText = `${word} ${formatNumber(Math.abs(val))}명 감소`;
+          diffEl.style.color = "#ef4444";
+          pos.style.width = "0%";
+          neg.style.width = "100%";
+        }
+      }
+      applyTrend({badge: "modalGrowthBadge", diff: "modalDiffText", pos: "modalPositiveBar", neg: "modalNegativeBar"}, item.pop2025, "전년 동월비");
+      applyTrend({badge: "modalMomBadge", diff: "modalMomDiff", pos: "modalMomPos", neg: "modalMomNeg"}, item.popPrev, "전월비");
+
+      // 하위 구역 분포 (특정시 및 제주특별자치도 행정시)
+      const districtsContainer = document.getElementById("subDistrictsContainer");
+      const districtsList = document.getElementById("subDistrictsList");
+      const subTypeLabel = document.getElementById("subTypeLabel");
+      
+      if (item.districts && item.districts.length > 0) {
+        districtsContainer.classList.remove("hidden");
+        districtsList.innerHTML = "";
+        
+        if (item.name === "제주특별자치도") {
+          subTypeLabel.innerText = "비자치 행정시";
+        } else {
+          subTypeLabel.innerText = "비자치 행정구";
+        }
+
+        item.districts.forEach(dist => {
+          const ratio = (dist.pop / item.pop2026) * 100;
+          
+          const distDiv = document.createElement("div");
+          distDiv.className = "sub-item";
+          distDiv.innerHTML = `
+            <div class="sub-item-meta">
+              <span>${dist.name}</span>
+              <span style="color: #334155;">${formatNumber(dist.pop)}명 <span style="color: #94a3b8; font-weight: 500; margin-left: 2px;">(${ratio.toFixed(1)}%)</span></span>
+            </div>
+            <div class="progress-track">
+              <div class="progress-bar-indigo" style="width: ${ratio}%"></div>
+            </div>
+          `;
+          districtsList.appendChild(distDiv);
+        });
+      } else {
+        districtsContainer.classList.add("hidden");
+      }
+
+      // 요약 브리핑 소견 세팅
+      let opinion = `${item.region} ${item.name}의 2026년 6월말 기준 주민등록 인구는 ${formatNumber(item.pop2026)}명으로, 전국 분석 대상 구역 중 ${item.rank}위를 기록하고 있습니다. `;
+      if (item.name === "제주특별자치도") {
+        opinion += `제주특별자치도는 단층제 광역행정체제이지만, 주민들의 거주 실태 조사를 위해 기존 행정시인 제주시와 서귀포시를 통합하여 단일 행정셀로 정식 구성했습니다. 클릭 후 하단 막대차트에서 행정시별 세부 주거 분포를 모니터링할 수 있습니다. `;
+      } else if (item.districts) {
+        opinion += `해당 구역은 지방자치법에 따라 행정구를 보유한 특정시(임명제 구청장)이며, 일반 행정구 인구가 하나의 통합 셀에 합산되었습니다. `;
+      } else if (item.type === "특별자치시") {
+        opinion += `세종특별자치시는 광역단체이지만 산하에 별도의 기초 자치단체가 없는 독특한 단층제 행정 시스템을 가지고 있어 대시보드에 개별 지구로 병합 수록되었습니다. `;
+      }
+      
+      if (isNew) {
+        opinion += item.prevNote || "";
+      } else if (growthVal >= 0) {
+        opinion += `인근 신도시 인프라 구축 및 혁신도시 활성화로 인해 전년비 ${formatNumber(growthVal)}명에 달하는 순증가를 보이며 활력 넘치는 인구 확장 추세를 이어가고 있습니다.`;
+      } else {
+        opinion += `전반적인 자연 감소세 및 원도심 주거 노후화에 따른 주변 택지 유출 요인으로 전년 대비 약 ${formatNumber(Math.abs(growthVal))}명의 조정을 겪는 중입니다.`;
+      }
+      if (item.popPrev !== null && item.popPrev !== undefined) {
+        const mv = item.pop2026 - item.popPrev;
+        opinion += ` 전월 대비로는 ${formatNumber(Math.abs(mv))}명 ${mv >= 0 ? "증가" : "감소"}(${mv >= 0 ? "+" : "-"}${Math.abs(mv / item.popPrev * 100).toFixed(2)}%)했습니다.`;
+      }
+      document.getElementById("modalOpinion").innerText = opinion;
+
+      modal.style.display = "flex";
+      modal.offsetHeight; 
+      modal.style.opacity = "1";
+      content.style.transform = "scale(1)";
+    }
+
+    function closeModal() {
+      const modal = document.getElementById("detailModal");
+      const content = document.getElementById("modalContent");
+      
+      modal.style.opacity = "0";
+      content.style.transform = "scale(0.92)";
+      
+      setTimeout(() => {
+        modal.style.display = "none";
+      }, 250);
+    }
+
+    document.getElementById("detailModal").addEventListener("click", function(e) {
+      if (e.target === this) {
+        closeModal();
+      }
+    });
+
+    // 다중 조건 필터 및 동적 정렬
+    function filterAndSortData() {
+      const searchWord = document.getElementById("searchInput").value.trim().toLowerCase();
+      const regionFilter = document.getElementById("regionFilter").value;
+      const typeFilter = document.getElementById("typeFilter").value;
+      const sortOrder = document.getElementById("sortOrder").value;
+
+      activeData = completeData.filter(item => {
+        const matchesSearch = item.name.toLowerCase().includes(searchWord) || item.region.includes(searchWord);
+        const matchesRegion = regionFilter === "all" || item.region === regionFilter;
+        
+        let matchesType = false;
+        if (typeFilter === "all") {
+          matchesType = true;
+        } else if (typeFilter === "시") {
+          matchesType = (item.type === "시" || item.type === "특별자치시" || item.type === "특별자치도");
+        } else if (typeFilter === "군") {
+          matchesType = (item.type === "군");
+        } else if (typeFilter === "구") {
+          matchesType = (item.type === "구");
+        }
+
+        return matchesSearch && matchesRegion && matchesType;
+      });
+
+      if (sortOrder === "pop_desc") {
+        activeData.sort((a, b) => b.pop2026 - a.pop2026);
+      } else if (sortOrder === "pop_asc") {
+        activeData.sort((a, b) => a.pop2026 - b.pop2026);
+      } else if (sortOrder === "growth_desc") {
+        activeData.sort((a, b) => {
+          const rateA = getGrowth(a), rateB = getGrowth(b);
+          if (rateA === null && rateB === null) return 0;
+          if (rateA === null) return 1;
+          if (rateB === null) return -1;
+          return rateB - rateA;
+        });
+      } else if (sortOrder === "growth_asc") {
+        activeData.sort((a, b) => {
+          const rateA = getGrowth(a), rateB = getGrowth(b);
+          if (rateA === null && rateB === null) return 0;
+          if (rateA === null) return 1;
+          if (rateB === null) return -1;
+          return rateA - rateB;
+        });
+      } else if (sortOrder === "mom_desc" || sortOrder === "mom_asc") {
+        const dir = sortOrder === "mom_desc" ? -1 : 1;
+        activeData.sort((a, b) => {
+          const rateA = getMoM(a), rateB = getMoM(b);
+          if (rateA === null && rateB === null) return 0;
+          if (rateA === null) return 1;
+          if (rateB === null) return -1;
+          return dir * (rateA - rateB);
+        });
+      } else if (sortOrder === "name_asc") {
+        activeData.sort((a, b) => `${a.region} ${a.name}`.localeCompare(`${b.region} ${b.name}`));
+      }
+
+      renderDashboard();
+    }
+
+    document.getElementById("searchInput").addEventListener("input", filterAndSortData);
+    document.getElementById("regionFilter").addEventListener("change", filterAndSortData);
+    document.getElementById("typeFilter").addEventListener("change", filterAndSortData);
+    document.getElementById("sortOrder").addEventListener("change", filterAndSortData);
+
+    window.onload = function () {
+      renderDashboard();
+    };
+  </script>
+
+
+</body></html>
