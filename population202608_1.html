@@ -631,15 +631,32 @@
   행정안전부 주민등록 인구통계 매핑 (전월 대비·전년 동월 대비)
 </p>
       
-      <!-- 전체 인구 정합성 보정을 위한 공식 안내 메세지 박스 (가독성 높은 연한 파스텔 배경 설계) -->
-      <div style="background-color: rgba(99, 102, 241, 0.12); border: 1px solid rgba(99, 102, 241, 0.3); padding: 12px 20px; border-radius: 12px; max-width: 900px; margin: 16px auto 0 auto; text-align: center;">
-        <p style="font-size: 13px; color: #c7d2fe; font-weight: 500; line-height: 1.6; display: flex; align-items: center; justify-content: center; gap: 8px;">
-          <svg width="16" height="16" fill="none" stroke="#a5b4fc" stroke-width="2.5" viewBox="0 0 24 24" style="flex-shrink: 0;">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-          </svg>
-          이 대시보드는 상단에 광역자치단체(시·도) 인구 순위를, 하단에 기초자치단체(시·군·자치구) 인구 순위를 나타냅니다. 산하에 기초자치단체를 두지 않는 단층제 광역자치단체인 세종특별자치시와 제주특별자치도(2개 행정시 포함)는 광역자치단체 순위에 표시하였습니다. 인천광역시 합계의 전월·전년 비교에는 구역 개편 전 구 단위 인구를 합산해 반영했습니다. 2026년 7월부터 광주광역시·전라남도가 전남광주통합특별시로 통합되어 하나의 광역 단위로 표시하며, 같은 시기 인천 영종구는 제물포구·영종구로, 서구는 서해구·검단구로 분구된 행정구역 개편으로 개별 셀로 표시하였습니다. 특례시 및 일반시(행정시) 셀을 클릭하면 일반구(행정구) 단위로 인구 세부현황이 표시되도록 제작되었습니다. 제주특별자치도를 클릭하면 행정시인 제주시와 서귀포시 인구 세부현황이 표시됩니다.
-        </p>
-      </div>
+<!-- 전체 인구 정합성 보정을 위한 공식 안내 메세지 박스 (가독성 높은 연한 파스텔 배경 설계) -->
+<div style="background-color: rgba(99, 102, 241, 0.12); border: 1px solid rgba(99, 102, 241, 0.3); padding: 14px 22px; border-radius: 12px; max-width: 900px; margin: 16px auto 0 auto;">
+  <div style="display: flex; align-items: flex-start; gap: 10px;">
+    <svg width="16" height="16" fill="none" stroke="#a5b4fc" stroke-width="2.5" viewBox="0 0 24 24" style="flex-shrink: 0; margin-top: 3px;">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+    </svg>
+    <ul style="list-style: none; margin: 0; padding: 0; font-size: 13px; color: #c7d2fe; font-weight: 500; line-height: 1.7; text-align: left;">
+      <li style="display: flex; gap: 6px; margin-bottom: 4px;">
+        <span style="color: #a5b4fc; flex-shrink: 0;">▸</span>
+        <span>이 대시보드는 상단에 광역자치단체(시·도) 인구 순위를, 하단에 기초자치단체(시·군·자치구) 인구 순위를 나타냅니다.</span>
+      </li>
+      <li style="display: flex; gap: 6px; margin-bottom: 4px;">
+        <span style="color: #a5b4fc; flex-shrink: 0;">▸</span>
+        <span>산하에 기초자치단체를 두지 않는 단층제 광역자치단체인 세종특별자치시와 제주특별자치도(2개 행정시 포함)는 광역자치단체 순위에 표시하였습니다.</span>
+      </li>
+      <li style="display: flex; gap: 6px; margin-bottom: 4px;">
+        <span style="color: #a5b4fc; flex-shrink: 0;">▸</span>
+        <span>특례시 및 일반시(행정시) 셀을 클릭하면 일반구(행정구) 단위로 인구 세부현황이 표시되도록 제작되었습니다.</span>
+      </li>
+      <li style="display: flex; gap: 6px;">
+        <span style="color: #a5b4fc; flex-shrink: 0;">▸</span>
+        <span>제주특별자치도를 클릭하면 행정시인 제주시와 서귀포시 인구 세부현황이 표시됩니다.</span>
+      </li>
+    </ul>
+  </div>
+</div>
       
       <!-- 핵심 통계 요약 -->
       <div class="summary-grid">
